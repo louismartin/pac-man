@@ -1,5 +1,6 @@
-import numpy as np
 from matplotlib import pyplot as plt
+import numpy as np
+from random import randint
 
 
 class OutsideOfLegalPath(Exception):
@@ -10,14 +11,15 @@ class Agent:
     def __init__(self, current_node=None):
         self.current_node = current_node
 
+    def move(self):
+        children_nodes = self.current_node.children_nodes
+        self.current_node = children_nodes[randint(0, len(children_nodes) - 1)]
+
 
 class Ghost(Agent):
     def __init__(self, current_node, killable=False):
         super().__init__(current_node)
         self.killable = killable
-
-    def move():
-        pass
 
 
 class PacMan(Agent):
@@ -79,7 +81,6 @@ class Board:
                     (row, col + 1) in board_nodes.keys()):
                 children.append(board_nodes[(row, col + 1)])
             current_node.children_nodes = children
-            print(current_node)
         return board_nodes, board_outline
 
     def add_agent(self, agent):
@@ -91,9 +92,8 @@ class Board:
             raise OutsideOfLegalPath("""Cannot add agent
                 to invalid board position""")
 
-    def __str__(self):
+    def compute_board(self):
         current_board = self.board_outline.copy()
-        print(current_board)
         for agent in self.agents:
             agent_row = agent.current_node.position[0]
             agent_col = agent.current_node.position[1]
@@ -101,25 +101,41 @@ class Board:
                 current_board[agent_row, agent_col] = 2
             if (isinstance(agent, Ghost)):
                 current_board[agent_row, agent_col] = 3
-        plt.matshow(current_board)
-        plt.show()
+        return current_board
+
+    def draw_board(self, speed):
+        current_board = self.compute_board()
+        plt.figure(1)
+        plt.matshow(current_board, fignum=1)
+        plt.pause(speed)
+
+    def __str__(self):
+        current_board = self.compute_board()
         return current_board.__str__()
+
+
+def play_games(board, game_steps, speed):
+    for step in range(game_steps):
+        for agent in board.agents:
+            agent.move()
+        board.draw_board(speed)
 
 if __name__ == '__main__':
     new_board = Board('simple-path.txt')
-    print(new_board.board_nodes[(0, 0)])
     # Add pacman
-    pac_man_init_node = new_board.board_nodes[(0, 5)]
+    pac_man_init_node = new_board.board_nodes[(5, 5)]
     pac_man = PacMan(pac_man_init_node)
 
     # Add ghosts
-    ghost1_init_node = new_board.board_nodes[(5, 5)]
+    ghost1_init_node = new_board.board_nodes[(0, 0)]
     ghost1 = Ghost(ghost1_init_node)
-    ghost2_init_node = new_board.board_nodes[(0, 0)]
+    ghost2_init_node = new_board.board_nodes[(0, 5)]
     ghost2 = Ghost(ghost2_init_node)
 
     new_board.add_agent(pac_man)
     new_board.add_agent(ghost1)
     new_board.add_agent(ghost2)
 
-    print(new_board)
+    game_speed = 0.1
+    step_nb = 100
+    play_games(new_board, step_nb, game_speed)
