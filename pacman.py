@@ -1,4 +1,9 @@
 import numpy as np
+from matplotlib import pyplot as plt
+
+
+class OutsideOfLegalPath(Exception):
+    pass
 
 
 class Agent:
@@ -47,7 +52,7 @@ class Board:
         board_outline = []
         with open(board_file_name) as f:
             for line in f:
-                board_outline.append(list(line.strip()))
+                board_outline.append([int(char) for char in line.strip()])
         board_outline = np.array(board_outline)
         board_row_nb, board_column_nb = board_outline.shape
 
@@ -55,7 +60,7 @@ class Board:
         # Create nodes
         for board_row_idx in range(board_row_nb):
             for board_column_idx in range(board_column_nb):
-                if(board_outline[board_row_idx, board_column_idx] == '+'):
+                if(board_outline[board_row_idx, board_column_idx] == 1):
                     new_position = (board_row_idx, board_column_idx)
                     new_node = Node(new_position)
                     board_nodes[new_position] = new_node
@@ -78,31 +83,39 @@ class Board:
         return board_nodes, board_outline
 
     def add_agent(self, agent):
-        target_node = self.board_nodes[agent.current_node.position]
-        self.agents.append(agent)
+        target_position = agent.current_node.position
+        if (target_position in self.board_nodes):
+            target_node = self.board_nodes[agent.current_node.position]
+            self.agents.append(agent)
+        else:
+            raise OutsideOfLegalPath("""Cannot add agent
+                to invalid board position""")
 
     def __str__(self):
         current_board = self.board_outline.copy()
+        print(current_board)
         for agent in self.agents:
             agent_row = agent.current_node.position[0]
             agent_col = agent.current_node.position[1]
             if (isinstance(agent, PacMan)):
-                current_board[agent_row, agent_col] = 'p'
+                current_board[agent_row, agent_col] = 2
             if (isinstance(agent, Ghost)):
-                current_board[agent_row, agent_col] = 'u'
+                current_board[agent_row, agent_col] = 3
+        plt.matshow(current_board)
+        plt.show()
         return current_board.__str__()
 
 if __name__ == '__main__':
     new_board = Board('simple-path.txt')
     print(new_board.board_nodes[(0, 0)])
     # Add pacman
-    pac_man_init_node = new_board.board_nodes[(0, 0)]
+    pac_man_init_node = new_board.board_nodes[(0, 5)]
     pac_man = PacMan(pac_man_init_node)
 
     # Add ghosts
     ghost1_init_node = new_board.board_nodes[(5, 5)]
     ghost1 = Ghost(ghost1_init_node)
-    ghost2_init_node = new_board.board_nodes[(0, 5)]
+    ghost2_init_node = new_board.board_nodes[(0, 0)]
     ghost2 = Ghost(ghost2_init_node)
 
     new_board.add_agent(pac_man)
