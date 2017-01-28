@@ -21,18 +21,13 @@ class PacMan(Agent):
 
 
 class Node:
-    def __init__(self, position, children_nodes=None,
-                 current_agents=None, reward=1):
+    def __init__(self, position, children_nodes=None, reward=1):
         self.position = position
         self.reward = reward
         if (children_nodes is None):
             self.children_nodes = []
         else:
             self.children_nodes = children_nodes
-        if (current_agents is None):
-            self.current_agents = []
-        else:
-            self.current_agents = current_agents
 
     def __str__(self):
         return ' position : {pos} \n children nb : {children_nb} \n'.\
@@ -42,6 +37,13 @@ class Node:
 
 class Board:
     def __init__(self, board_file_name):
+        self.agents = []
+        board_nodes, board_outline = Board.construct_board(board_file_name)
+        self.board_nodes = board_nodes
+        self.board_outline = board_outline
+
+    @staticmethod
+    def construct_board(board_file_name):
         board_outline = []
         with open(board_file_name) as f:
             for line in f:
@@ -73,40 +75,38 @@ class Board:
                 children.append(board_nodes[(row, col + 1)])
             current_node.children_nodes = children
             print(current_node)
-        self.board_nodes = board_nodes
-        self.board_outline = board_outline
+        return board_nodes, board_outline
 
     def add_agent(self, agent):
         target_node = self.board_nodes[agent.current_node.position]
-        if(not target_node.current_agents):
-            target_node.current_agents.append(agent)
-        else:
-            raise Warning('there is already an agent here !')
+        self.agents.append(agent)
 
     def __str__(self):
         current_board = self.board_outline.copy()
-        for position, node in self.board_nodes.items():
-            if (len(node.current_agents) > 0):
-                if (isinstance(node.current_agents[0], PacMan)):
-                    current_board[position[0], position[1]] = 'p'
-                if (isinstance(node.current_agents[0], Ghost)):
-                    current_board[position[0], position[1]] = 'u'
+        for agent in self.agents:
+            agent_row = agent.current_node.position[0]
+            agent_col = agent.current_node.position[1]
+            if (isinstance(agent, PacMan)):
+                current_board[agent_row, agent_col] = 'p'
+            if (isinstance(agent, Ghost)):
+                current_board[agent_row, agent_col] = 'u'
         return current_board.__str__()
 
-new_board = Board('simple-path.txt')
-print(new_board.board_nodes[(0, 0)])
-# Add pacman
-pac_man_init_node = new_board.board_nodes[(0, 0)]
-pac_man = PacMan(pac_man_init_node)
+if __name__ == '__main__':
+    new_board = Board('simple-path.txt')
+    print(new_board.board_nodes[(0, 0)])
+    # Add pacman
+    pac_man_init_node = new_board.board_nodes[(0, 0)]
+    pac_man = PacMan(pac_man_init_node)
 
-# Add ghosts
-ghost1_init_node = new_board.board_nodes[(5, 5)]
-ghost1 = Ghost(ghost1_init_node)
-ghost2_init_node = new_board.board_nodes[(0, 5)]
-ghost2 = Ghost(ghost2_init_node)
+    # Add ghosts
+    ghost1_init_node = new_board.board_nodes[(5, 5)]
+    ghost1 = Ghost(ghost1_init_node)
+    ghost2_init_node = new_board.board_nodes[(0, 5)]
+    ghost2 = Ghost(ghost2_init_node)
 
-new_board.add_agent(pac_man)
-new_board.add_agent(ghost1)
-new_board.add_agent(ghost2)
+    new_board.add_agent(pac_man)
+    new_board.add_agent(ghost1)
+    new_board.add_agent(ghost2)
 
-print(new_board)
+    print(new_board)
