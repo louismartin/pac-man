@@ -1,6 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from random import randint
+from time import sleep
+from tools import timeit
 
 
 class OutsideOfLegalPath(Exception):
@@ -94,6 +96,9 @@ class Board:
 
     def compute_board(self):
         current_board = self.board_outline.copy()
+        for position, node in self.board_nodes.items():
+            if (node.reward > 0):
+                current_board[node.position[0], node.position[1]] = 4
         for agent in self.agents:
             agent_row = agent.current_node.position[0]
             agent_col = agent.current_node.position[1]
@@ -103,11 +108,15 @@ class Board:
                 current_board[agent_row, agent_col] = 3
         return current_board
 
-    def draw_board(self, speed):
+    @timeit
+    def draw_board(self, title):
         current_board = self.compute_board()
-        plt.figure(1)
-        plt.matshow(current_board, fignum=1)
-        plt.pause(speed)
+        # plt.figure(1)
+        plt.matshow(current_board, fignum=0)
+        plt.title(title)
+        plt.draw()
+        plt.show(block=False)
+        plt.clf()
 
     def __str__(self):
         current_board = self.compute_board()
@@ -115,10 +124,16 @@ class Board:
 
 
 def play_games(board, game_steps, speed):
+    game_reward = 0
     for step in range(game_steps):
         for agent in board.agents:
             agent.move()
-        board.draw_board(speed)
+            if (isinstance(agent, PacMan)):
+                game_reward += agent.current_node.reward
+                agent.current_node.reward = 0
+        board_title = 'reward : ' + str(game_reward)
+        board.draw_board(board_title)
+        sleep(speed)
 
 if __name__ == '__main__':
     new_board = Board('simple-path.txt')
@@ -136,6 +151,6 @@ if __name__ == '__main__':
     new_board.add_agent(ghost1)
     new_board.add_agent(ghost2)
 
-    game_speed = 0.1
+    game_speed = 0
     step_nb = 100
     play_games(new_board, step_nb, game_speed)
