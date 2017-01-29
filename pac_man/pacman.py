@@ -39,47 +39,45 @@ class Node:
             self.children_nodes = children_nodes
 
     def __str__(self):
-        return ' position : {pos} \n children nb : {children_nb} \n'.\
-            format(children_nb=str(len(self.children_nodes)),
-                   pos=self.position)
+        return ' position : {pos} \n children nb : {nb_children} \n'.format(
+            nb_children=len(self.children_nodes), pos=self.position)
 
 
 class Board:
-    def __init__(self, board_file_name):
+    def __init__(self, board_path):
         self.agents = []
-        board_nodes, board_outline = Board.construct_board(board_file_name)
+        board_nodes, board_outline = self.build_board(board_path)
         self.board_nodes = board_nodes
         self.board_outline = board_outline
 
-    @staticmethod
-    def construct_board(board_file_name):
+    def build_board(self, board_path):
         board_outline = []
-        with open(board_file_name) as f:
+        with open(board_path) as f:
             for line in f:
                 board_outline.append([int(char) for char in line.strip()])
         board_outline = np.array(board_outline)
-        board_row_nb, board_column_nb = board_outline.shape
+        nb_board_row, nb_board_column = board_outline.shape
 
         board_nodes = {}
         # Create nodes
-        for board_row_idx in range(board_row_nb):
-            for board_column_idx in range(board_column_nb):
-                if(board_outline[board_row_idx, board_column_idx] == 1):
-                    new_position = (board_row_idx, board_column_idx)
+        for row in range(nb_board_row):
+            for col in range(nb_board_column):
+                if(board_outline[row, col] == 1):
+                    new_position = (row, col)
                     new_node = Node(new_position)
                     board_nodes[new_position] = new_node
-        # Associate nodes to children
+        # Link nodes to children
         for position, current_node in board_nodes.items():
             children = []
             row = position[0]
             col = position[1]
             if (row > 0 and (row - 1, col) in board_nodes.keys()):
                 children.append(board_nodes[(row - 1, col)])
-            if (row < board_row_nb and (row + 1, col) in board_nodes.keys()):
+            if (row < nb_board_row and (row + 1, col) in board_nodes.keys()):
                 children.append(board_nodes[(row + 1, col)])
             if (col > 0 and (row, col - 1) in board_nodes.keys()):
                 children.append(board_nodes[(row, col - 1)])
-            if (col < board_column_nb and
+            if (col < nb_board_column and
                     (row, col + 1) in board_nodes.keys()):
                 children.append(board_nodes[(row, col + 1)])
             current_node.children_nodes = children
@@ -91,8 +89,8 @@ class Board:
             target_node = self.board_nodes[agent.current_node.position]
             self.agents.append(agent)
         else:
-            raise OutsideOfLegalPath("""Cannot add agent
-                to invalid board position""")
+            raise OutsideOfLegalPath("Cannot add agent\
+                to invalid board position")
 
     def compute_board(self):
         current_board = self.board_outline.copy()
@@ -119,8 +117,7 @@ class Board:
         plt.clf()
 
     def __str__(self):
-        current_board = self.compute_board()
-        return current_board.__str__()
+        return str(self.compute_board())
 
 
 def play_games(board, game_steps, speed):
@@ -152,5 +149,5 @@ if __name__ == '__main__':
     new_board.add_agent(ghost2)
 
     game_speed = 0
-    step_nb = 100
-    play_games(new_board, step_nb, game_speed)
+    nb_step = 100
+    play_games(new_board, nb_step, game_speed)
