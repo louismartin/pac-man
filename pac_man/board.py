@@ -1,7 +1,6 @@
-from agents import Ghost, PacMan
-from matplotlib import pyplot as plt
 import numpy as np
-from tools import timeit
+
+from agents import Ghost, PacMan
 
 
 class OutsideOfLegalPath(Exception):
@@ -24,7 +23,6 @@ class Node:
 
 class Board:
     def __init__(self, board_path):
-        self.agents = []
         board_nodes, board_outline = self.build_board(board_path)
         self.board_nodes = board_nodes
         self.board_outline = board_outline
@@ -62,38 +60,3 @@ class Board:
             current_node.children_nodes = children
         return board_nodes, board_outline
 
-    def add_agent(self, agent):
-        target_position = agent.current_node.position
-        if (target_position in self.board_nodes):
-            target_node = self.board_nodes[agent.current_node.position]
-            self.agents.append(agent)
-        else:
-            raise OutsideOfLegalPath("Cannot add agent\
-                to invalid board position")
-
-    def compute_board(self):
-        current_board = self.board_outline.copy()
-        for position, node in self.board_nodes.items():
-            if (node.reward > 0):
-                current_board[node.position[0], node.position[1]] = 4
-        for agent in self.agents:
-            agent_row = agent.current_node.position[0]
-            agent_col = agent.current_node.position[1]
-            if (isinstance(agent, PacMan)):
-                current_board[agent_row, agent_col] = 2
-            if (isinstance(agent, Ghost)):
-                current_board[agent_row, agent_col] = 3
-        return current_board
-
-    @timeit
-    def draw_board(self, title):
-        current_board = self.compute_board()
-        # plt.figure(1)
-        plt.matshow(current_board, fignum=0)
-        plt.title(title)
-        plt.draw()
-        plt.show(block=False)
-        plt.clf()
-
-    def __str__(self):
-        return str(self.compute_board())
