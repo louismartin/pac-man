@@ -2,7 +2,7 @@ from time import sleep
 
 from matplotlib import pyplot as plt
 
-from tools import timeit
+from pacman.tools import timeit
 
 
 class Game:

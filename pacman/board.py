@@ -1,6 +1,6 @@
 import numpy as np
 
-from agents import Ghost, PacMan
+from pacman.agents import Ghost, PacMan
 
 
 class OutsideOfLegalPath(Exception):
@@ -59,4 +59,3 @@ class Board:
                 children.append(board_nodes[(row, col + 1)])
             current_node.children_nodes = children
         return board_nodes, board_outline
-
