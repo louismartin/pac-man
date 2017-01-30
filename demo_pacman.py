@@ -21,7 +21,7 @@ ghost2_init_node = board.board_nodes[(0, 5)]
 ghost2 = Ghost(ghost2_init_node)
 game.add_ghost(ghost2)
 
-candy1_node = board.board_nodes[(0, 3)]
+candy1_node = board.board_nodes[(5, 3)]
 candy1 = Candy(candy1_node)
 game.add_candy(candy1)
 

@@ -3,12 +3,16 @@ from matplotlib import pyplot as plt
 from pacman.tools import timeit
 
 
+class InvalidPosition(Exception):
+    pass
+
+
 class Game:
     def __init__(self, board, speed, pacman_agent=None, ghost_agents=None):
         self.board = board
         self.pacman = pacman_agent
         self.speed = speed
-        self.candies = []
+        self.candies = {}
 
         if (not ghost_agents):
             self.ghosts = []
@@ -21,7 +25,7 @@ class Game:
         if (target_position in self.board.board_nodes):
             self.pacman = agent
         else:
-            raise OutsideOfLegalPath("Cannot add agent\
+            raise InvalidPosition("Cannot add agent\
                 to invalid board position")
 
     def add_ghost(self, agent):
@@ -29,15 +33,15 @@ class Game:
         if (target_position in self.board.board_nodes):
             self.ghosts.append(agent)
         else:
-            raise OutsideOfLegalPath("Cannot add agent\
+            raise InvalidPosition("Cannot add agent\
                 to invalid board position")
 
     def add_candy(self, candy):
         position = candy.node.position
         if (position in self.board.board_nodes):
-            self.candies.append(candy)
+            self.candies[position] = candy
         else:
-            raise OutsideOfLegalPath("Cannot add candy\
+            raise InvalidPosition("Cannot add candy\
                 to invalid board position")
 
     def check_collision(self, pacman, pacman_new_node,
@@ -75,7 +79,13 @@ class Game:
                                                  next_ghost_node)
                 if(collision):
                     game_finished = self.resolve_collision(ghost, self.pacman)
-                    return self.pacman.reward
+                    if game_finished:
+                        return self.pacman.reward
+
+            if (next_pacman_node.position in self.candies):
+                del self.candies[next_pacman_node.position]
+                for ghost in self.ghosts:
+                    ghost.start_blue()
 
             # Move agents
             self.pacman.move(next_pacman_node)
@@ -93,13 +103,15 @@ class Game:
         for position, node in self.board.board_nodes.items():
             if (node.reward > 0):
                 current_board[node.position[0], node.position[1]] = 4
-        for candy in self.candies:
-            row, col = candy.node.position[0], candy.node.position[1]
+        for row, col in self.candies:
             current_board[row, col] = 6
         for ghost in self.ghosts:
             row, col = ghost.get_position()
             if ghost.blue:
-                current_board[row, col] = 3
+                if ghost.eaten:
+                    current_board[row, col] = 3
+                else:
+                    current_board[row, col] = 7
             else:
                 current_board[row, col] = 5
         pacman_row, pacman_col = self.pacman.get_position()

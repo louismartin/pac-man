@@ -3,10 +3,6 @@ import numpy as np
 from pacman.agents import Ghost, PacMan
 
 
-class OutsideOfLegalPath(Exception):
-    pass
-
-
 class Candy:
     def __init__(self, node, effect='blue'):
         self.node = node
