@@ -1,5 +1,5 @@
 from pacman.agents import Ghost, PacMan
-from pacman.board import Board
+from pacman.board import Board, Candy
 from pacman.game import Game
 from pacman.tools import timeit
 
@@ -21,6 +21,9 @@ ghost2_init_node = board.board_nodes[(0, 5)]
 ghost2 = Ghost(ghost2_init_node)
 game.add_ghost(ghost2)
 
+candy1_node = board.board_nodes[(0, 3)]
+candy1 = Candy(candy1_node)
+game.add_candy(candy1)
 
 total_reward = game.play_game()
 print('Game finished !\nTotal_reward : {reward}'.format(reward=total_reward))

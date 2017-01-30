@@ -19,7 +19,6 @@ class Game:
     def add_pacman(self, agent):
         target_position = agent.current_node.position
         if (target_position in self.board.board_nodes):
-            target_node = self.board.board_nodes[agent.current_node.position]
             self.pacman = agent
         else:
             raise OutsideOfLegalPath("Cannot add agent\
@@ -28,14 +27,18 @@ class Game:
     def add_ghost(self, agent):
         target_position = agent.current_node.position
         if (target_position in self.board.board_nodes):
-            target_node = self.board.board_nodes[agent.current_node.position]
             self.ghosts.append(agent)
         else:
             raise OutsideOfLegalPath("Cannot add agent\
                 to invalid board position")
 
-    def add_candy(self, node):
-        self.candies.append(node)
+    def add_candy(self, candy):
+        position = candy.node.position
+        if (position in self.board.board_nodes):
+            self.candies.append(candy)
+        else:
+            raise OutsideOfLegalPath("Cannot add candy\
+                to invalid board position")
 
     def check_collision(self, pacman, pacman_new_node,
                         ghost, ghost_new_node):
@@ -71,7 +74,8 @@ class Game:
                                                  ghost,
                                                  next_ghost_node)
                 if(collision):
-                    game_finished = resolve_collision(ghost, self.pacman)
+                    game_finished = self.resolve_collision(ghost, self.pacman)
+                    return self.pacman.reward
 
             # Move agents
             self.pacman.move(next_pacman_node)
@@ -79,7 +83,6 @@ class Game:
                     ghost.move(next_ghost_nodes[idx])
 
             # Update rewards
-            print(vars(self.ghosts[1]))
             self.pacman.reward += self.pacman.current_node.reward
             self.pacman.current_node.reward = 0
             board_title = 'reward : ' + str(self.pacman.reward)
@@ -90,8 +93,8 @@ class Game:
         for position, node in self.board.board_nodes.items():
             if (node.reward > 0):
                 current_board[node.position[0], node.position[1]] = 4
-        for candy_node in self.candies:
-            row, col = candy_node.position[0], candy_node.position[1]
+        for candy in self.candies:
+            row, col = candy.node.position[0], candy.node.position[1]
             current_board[row, col] = 6
         for ghost in self.ghosts:
             row, col = ghost.get_position()
@@ -103,7 +106,6 @@ class Game:
         current_board[pacman_row, pacman_col] = 2
         return current_board
 
-    @timeit
     def draw_state(self, title):
         current_board = self.compute_state()
         if self.plot:
