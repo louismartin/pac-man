@@ -60,6 +60,7 @@ class Game:
     def draw_state(self, title):
         current_board = self.compute_state()
         if self.plot:
+            plt.title(title)
             self.plot.set_data(current_board)
         else:
             plt.ion()
