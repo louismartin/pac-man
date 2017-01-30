@@ -24,7 +24,15 @@ class Ghost(Agent):
         self.eaten = False
         self.blue_time_left = 0
 
-    def start_blue(self, blue_time_left=20):
+    def move(self, node):
+        self.current_node = node
+        if(self.blue_time_left):
+            self.blue_time_left -= 1
+        if(not self.blue_time_left):
+            self.blue = False
+            self.eaten = False
+
+    def start_blue(self, blue_time_left=100):
         self.blue = True
         self.eaten = False
         self.blue_time_left = blue_time_left
