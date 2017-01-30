@@ -55,16 +55,16 @@ class Game:
         return collision
 
     def resolve_collision(self, ghost, pacman):
-        game_finished = False
+        game_over = False
         if (not ghost.blue):
-            game_finished = True
+            game_over = True
         elif(ghost.blue and not ghost.eaten):
             pacman.eat_ghost(ghost)
-        return game_finished
+        return game_over
 
     def play_game(self):
-        game_finished = False
-        while (not game_finished):
+        game_over = False
+        while (not game_over):
             # Compute next moves
             next_pacman_node = self.pacman.get_move()
             next_ghost_nodes = [ghost.get_move() for ghost in self.ghosts]
@@ -78,8 +78,8 @@ class Game:
                                                  ghost,
                                                  next_ghost_node)
                 if(collision):
-                    game_finished = self.resolve_collision(ghost, self.pacman)
-                    if game_finished:
+                    game_over = self.resolve_collision(ghost, self.pacman)
+                    if game_over:
                         return self.pacman.reward
 
             if (next_pacman_node.position in self.candies):
