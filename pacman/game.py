@@ -53,14 +53,15 @@ class Game:
             current_ghost_nodes = [ghost.current_node for ghost in self.ghosts]
 
             # Check if game finished
-            conflicts = [self.check_rules(self.pacman.current_node,
-                                          next_pacman_node, current_ghost_node,
-                                          next_ghost_node)
-                         for current_ghost_node, next_ghost_node
-                         in zip(current_ghost_nodes, next_ghost_nodes)]
-            if (True in conflicts):
-                game_finished = True
-                return game_reward
+            for current_ghost_node, next_ghost_node in zip(
+                        current_ghost_nodes, next_ghost_nodes):
+                collision = self.check_rules(self.pacman.current_node,
+                                             next_pacman_node,
+                                             current_ghost_node,
+                                             next_ghost_node)
+                if(collision):
+                    game_finished = True
+                    return game_reward
 
             # Move agents
             self.pacman.move(next_pacman_node)
