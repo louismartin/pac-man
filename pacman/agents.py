@@ -18,11 +18,28 @@ class Agent:
 
 
 class Ghost(Agent):
-    def __init__(self, current_node, killable=False):
+    def __init__(self, current_node, blue=False):
         super().__init__(current_node)
-        self.killable = killable
+        self.blue = blue
+        self.eaten = False
+        self.blue_time_left = 0
+
+    def start_blue(self, blue_time_left=20):
+        self.blue = True
+        self.eaten = False
+        self.blue_time_left = blue_time_left
+
+    def stop_blue(self):
+        self.blue = False
+        self.eaten = False
+        self.blue_time_left = 0
 
 
 class PacMan(Agent):
-    def __init_(self, current_node):
-        super().__init__(heigt)
+    def __init__(self, current_node):
+        super().__init__(current_node)
+        self.reward = 0
+
+    def eat_ghost(self, ghost, reward=10):
+        ghost.eaten = True
+        self.reward += reward
