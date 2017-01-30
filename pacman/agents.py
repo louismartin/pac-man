@@ -46,8 +46,7 @@ class Ghost(Agent):
 class PacMan(Agent):
     def __init__(self, current_node):
         super().__init__(current_node)
-        self.reward = 0
 
     def eat_ghost(self, ghost, reward=10):
         ghost.eaten = True
-        self.reward += reward
+        return reward

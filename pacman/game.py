@@ -44,58 +44,70 @@ class Game:
             raise InvalidPosition("Cannot add candy\
                 to invalid board position")
 
-    def check_collision(self, pacman, pacman_new_node,
-                        ghost, ghost_new_node):
+    def check_collision(self, pacman, ghosts):
         collision = False
-        if (pacman_new_node.position == ghost_new_node.position):
-            collision = True
-        if ((pacman_new_node.position == ghost.current_node.position) and (
-                pacman.current_node.position == ghost_new_node.position)):
-            collision = True
-        return collision
+        reward = 0
+        for ghost in ghosts:
+            # Check if pacman meets a ghost
+            if pacman.current_node.position == ghost.current_node.position:
+                # Check if ghost eats the pacman or the contrary
+                reward = self.resolve_collision(ghost, pacman)
+                break
+        return reward
 
     def resolve_collision(self, ghost, pacman):
-        game_over = False
+        """Check if ghost eats the pacman or the contrary"""
+        reward = 0
         if (not ghost.blue):
-            game_over = True
+            self.game_over = True
         elif(ghost.blue and not ghost.eaten):
-            pacman.eat_ghost(ghost)
-        return game_over
+            reward += pacman.eat_ghost(ghost)
+        return reward
 
-    def play_game(self):
-        game_over = False
-        while (not game_over):
-            # Compute next moves
-            next_pacman_node = self.pacman.get_move()
-            next_ghost_nodes = [ghost.get_move() for ghost in self.ghosts]
-            current_ghost_nodes = [ghost.current_node for ghost in self.ghosts]
+    def play(self, move):
+        """
+        Play one move
+        Args:
+            - move (Node): next node
+        Returns:
+            - reward (int)
+        """
+        reward = 0
+        # Move the pacman
+        self.pacman.move(move)
 
-            # Check if game finished
-            for ghost, next_ghost_node in zip(
-                        self.ghosts, next_ghost_nodes):
-                collision = self.check_collision(self.pacman,
-                                                 next_pacman_node,
-                                                 ghost,
-                                                 next_ghost_node)
-                if(collision):
-                    game_over = self.resolve_collision(ghost, self.pacman)
-                    if game_over:
-                        return self.pacman.reward
+        # Check for collision before moving the ghosts
+        reward += self.check_collision(self.pacman, self.ghosts)
+        # Move the ghosts
+        for ghost in self.ghosts:
+            move = ghost.get_move()
+            ghost.move(move)
+        # Check for collision after moving the ghosts
+        reward += self.check_collision(self.pacman, self.ghosts)
 
-            if (next_pacman_node.position in self.candies):
-                del self.candies[next_pacman_node.position]
+        # Check if the pacman is still alive to go forth with the events
+        if not self.game_over:
+            # Check if candy is eaten
+            if self.pacman.current_node.position in self.candies:
+                del self.candies[self.pacman.current_node.position]
                 for ghost in self.ghosts:
                     ghost.start_blue()
 
-            # Move agents
-            self.pacman.move(next_pacman_node)
-            for idx, ghost in enumerate(self.ghosts):
-                    ghost.move(next_ghost_nodes[idx])
-
             # Update rewards
-            self.pacman.reward += self.pacman.current_node.reward
+            reward += self.pacman.current_node.reward
             self.pacman.current_node.reward = 0
-            board_title = 'reward : ' + str(self.pacman.reward)
+        return reward
+
+    def play_game(self):
+        self.game_over = False
+        cum_reward = 0
+        while (not self.game_over):
+            # Compute next moves
+            move = self.pacman.get_move()
+            reward = self.play(move)
+            cum_reward += reward
+
+            board_title = 'reward : {}'.format(cum_reward)
             self.draw_state(board_title)
 
     def compute_state(self):
