@@ -4,22 +4,23 @@ from pacman.game import Game
 from pacman.tools import timeit
 
 
-new_board = Board('boards/simple_board.txt')
+board = Board('boards/simple_board.txt')
 game_speed = 0.00001
-new_game = Game(new_board, game_speed)
-# Create agents
-pacman_init_node = new_board.board_nodes[(5, 5)]
+game = Game(board, game_speed)
+
+# Create agents and add them to game
+pacman_init_node = board.board_nodes[(5, 5)]
 pacman = PacMan(pacman_init_node)
+game.add_pacman(pacman)
 
-ghost1_init_node = new_board.board_nodes[(0, 0)]
+ghost1_init_node = board.board_nodes[(0, 0)]
 ghost1 = Ghost(ghost1_init_node)
-ghost2_init_node = new_board.board_nodes[(0, 5)]
+game.add_ghost(ghost1)
+
+ghost2_init_node = board.board_nodes[(0, 5)]
 ghost2 = Ghost(ghost2_init_node)
+game.add_ghost(ghost2)
 
-# Add agents to game
-new_game.add_pacman(pacman)
-new_game.add_ghost(ghost1)
-new_game.add_ghost(ghost2)
 
-total_reward = new_game.play_game()
+total_reward = game.play_game()
 print('Game finished !\nTotal_reward : {reward}'.format(reward=total_reward))
