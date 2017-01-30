@@ -38,7 +38,7 @@ class Game:
 
     def add_candy(self, candy):
         position = candy.node.position
-        if (position in self.board.board_nodes):
+        if (position in self.board.nodes):
             self.candies[position] = candy
         else:
             raise InvalidPosition("Cannot add candy\
