@@ -64,7 +64,7 @@ class Game:
         else:
             plt.ion()
             plt.title(title)
-            self.plot = plt.matshow(current_board)
+            self.plot = plt.matshow(current_board, fignum=0)
         plt.pause(self.speed)
 
     def __str__(self):
