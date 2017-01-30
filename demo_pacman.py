@@ -1,5 +1,3 @@
-from time import sleep
-
 from pacman.agents import Ghost, PacMan
 from pacman.board import Board
 from pacman.game import Game
@@ -7,7 +5,7 @@ from pacman.tools import timeit
 
 
 new_board = Board('boards/simple_board.txt')
-game_speed = 0
+game_speed = 0.00001
 new_game = Game(new_board, game_speed)
 # Create agents
 pacman_init_node = new_board.board_nodes[(5, 5)]

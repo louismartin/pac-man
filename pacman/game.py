@@ -1,5 +1,3 @@
-from time import sleep
-
 from matplotlib import pyplot as plt
 
 from pacman.tools import timeit
@@ -14,6 +12,7 @@ class Game:
             self.ghosts = []
         else:
             self.ghosts = ghost_agents
+        self.plot = None
 
     def add_pacman(self, agent):
         target_position = agent.current_node.position
@@ -73,7 +72,6 @@ class Game:
             self.pacman.current_node.reward = 0
             board_title = 'reward : ' + str(game_reward)
             self.draw_state(board_title)
-            sleep(self.speed)
 
     def compute_state(self):
         current_board = self.board.board_outline.copy()
@@ -90,12 +88,14 @@ class Game:
     @timeit
     def draw_state(self, title):
         current_board = self.compute_state()
-        # plt.figure(1)
-        plt.matshow(current_board, fignum=0)
-        plt.title(title)
-        plt.draw()
-        plt.show(block=False)
-        plt.clf()
+        if self.plot:
+            plt.title(title)
+            self.plot.set_data(current_board)
+        else:
+            plt.ion()
+            plt.title(title)
+            self.plot = plt.matshow(current_board, fignum=0)
+        plt.pause(self.speed)
 
     def __str__(self):
         return str(self.compute_state())
