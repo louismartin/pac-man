@@ -22,7 +22,7 @@ class Game:
 
     def add_pacman(self, agent):
         target_position = agent.current_node.position
-        if (target_position in self.board.board_nodes):
+        if (target_position in self.board.nodes):
             self.pacman = agent
         else:
             raise InvalidPosition("Cannot add agent\
@@ -30,7 +30,7 @@ class Game:
 
     def add_ghost(self, agent):
         target_position = agent.current_node.position
-        if (target_position in self.board.board_nodes):
+        if (target_position in self.board.nodes):
             self.ghosts.append(agent)
         else:
             raise InvalidPosition("Cannot add agent\
@@ -99,8 +99,8 @@ class Game:
             self.draw_state(board_title)
 
     def compute_state(self):
-        current_board = self.board.board_outline.copy()
-        for position, node in self.board.board_nodes.items():
+        current_board = self.board.outline.copy()
+        for position, node in self.board.nodes.items():
             if (node.reward > 0):
                 current_board[node.position[0], node.position[1]] = 4
         for row, col in self.candies:

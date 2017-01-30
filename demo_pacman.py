@@ -9,15 +9,15 @@ game_speed = 0.00001
 game = Game(board, game_speed)
 
 # Create agents and add them to game
-pacman_init_node = board.board_nodes[(5, 5)]
+pacman_init_node = board.nodes[(5, 5)]
 pacman = PacMan(pacman_init_node)
 game.add_pacman(pacman)
 
-ghost1_init_node = board.board_nodes[(0, 0)]
+ghost1_init_node = board.nodes[(0, 0)]
 ghost1 = Ghost(ghost1_init_node)
 game.add_ghost(ghost1)
 
-ghost2_init_node = board.board_nodes[(0, 5)]
+ghost2_init_node = board.nodes[(0, 5)]
 ghost2 = Ghost(ghost2_init_node)
 game.add_ghost(ghost2)
 
