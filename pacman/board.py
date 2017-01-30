@@ -7,6 +7,12 @@ class OutsideOfLegalPath(Exception):
     pass
 
 
+class Candy:
+    def __init__(self, node, effect='blue'):
+        self.node = node
+        self.effect = effect
+
+
 class Node:
     def __init__(self, position, children_nodes=None, reward=1):
         self.position = position
