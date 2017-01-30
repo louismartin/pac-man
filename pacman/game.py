@@ -1,5 +1,4 @@
 from matplotlib import pyplot as plt
-from tqdm import tqdm
 
 from pacman.tools import timeit
 
@@ -35,7 +34,7 @@ class Game:
 
     def play_game(self, game_steps):
         game_reward = 0
-        for step in tqdm(range(game_steps)):
+        for step in range(game_steps):
             self.pac_man.move()
             game_reward += self.pac_man.current_node.reward
             self.pac_man.current_node.reward = 0
@@ -57,6 +56,7 @@ class Game:
         current_board[pac_man_row, pac_man_col] = 2
         return current_board
 
+    @timeit
     def draw_state(self, title):
         current_board = self.compute_state()
         if self.plot:
