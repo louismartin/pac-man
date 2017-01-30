@@ -4,9 +4,9 @@ from pacman.tools import timeit
 
 
 class Game:
-    def __init__(self, board, speed, pac_man_agent=None, ghost_agents=None):
+    def __init__(self, board, speed, pacman_agent=None, ghost_agents=None):
         self.board = board
-        self.pac_man = pac_man_agent
+        self.pacman = pacman_agent
         self.speed = speed
         if (not ghost_agents):
             self.ghosts = []
@@ -14,11 +14,11 @@ class Game:
             self.ghosts = ghost_agents
         self.plot = None
 
-    def add_pac_man(self, agent):
+    def add_pacman(self, agent):
         target_position = agent.current_node.position
         if (target_position in self.board.board_nodes):
             target_node = self.board.board_nodes[agent.current_node.position]
-            self.pac_man = agent
+            self.pacman = agent
         else:
             raise OutsideOfLegalPath("Cannot add agent\
                 to invalid board position")
@@ -32,15 +32,44 @@ class Game:
             raise OutsideOfLegalPath("Cannot add agent\
                 to invalid board position")
 
-    def play_game(self, game_steps):
-        game_reward = 0
-        for step in range(game_steps):
-            self.pac_man.move()
-            game_reward += self.pac_man.current_node.reward
-            self.pac_man.current_node.reward = 0
-            for ghost in self.ghosts:
-                ghost.move()
+    def check_rules(self, pacman_old_node, pacman_new_node,
+                    ghost_old_node, ghost_new_node):
+        collision = False
+        if (pacman_new_node.position == ghost_new_node.position):
+            collision = True
+        if ((pacman_new_node.position == ghost_old_node.position) and (
+                pacman_old_node.position == ghost_new_node.position)):
+            collision = True
+        return collision
 
+    def play_game(self):
+        game_reward = 0
+        game_finished = False
+        while (not game_finished):
+            # Compute next moves
+            next_pacman_node = self.pacman.get_move()
+            next_ghost_nodes = [ghost.get_move() for ghost in self.ghosts]
+            current_ghost_nodes = [ghost.current_node for ghost in self.ghosts]
+
+            # Check if game finished
+            for current_ghost_node, next_ghost_node in zip(
+                        current_ghost_nodes, next_ghost_nodes):
+                collision = self.check_rules(self.pacman.current_node,
+                                             next_pacman_node,
+                                             current_ghost_node,
+                                             next_ghost_node)
+                if(collision):
+                    game_finished = True
+                    return game_reward
+
+            # Move agents
+            self.pacman.move(next_pacman_node)
+            for idx, ghost in enumerate(self.ghosts):
+                    ghost.move(next_ghost_nodes[idx])
+
+            # Update rewards
+            game_reward += self.pacman.current_node.reward
+            self.pacman.current_node.reward = 0
             board_title = 'reward : ' + str(game_reward)
             self.draw_state(board_title)
 
@@ -52,8 +81,8 @@ class Game:
         for ghost in self.ghosts:
             row, col = ghost.get_position()
             current_board[row, col] = 3
-        pac_man_row, pac_man_col = self.pac_man.get_position()
-        current_board[pac_man_row, pac_man_col] = 2
+        pacman_row, pacman_col = self.pacman.get_position()
+        current_board[pacman_row, pacman_col] = 2
         return current_board
 
     @timeit
