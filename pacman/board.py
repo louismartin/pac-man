@@ -10,9 +10,8 @@ class Candy:
 
 
 class Node:
-    def __init__(self, position, children_nodes=None, reward=1):
+    def __init__(self, position, children_nodes=None):
         self.position = position
-        self.reward = reward
         if (children_nodes is None):
             self.children_nodes = []
         else:
