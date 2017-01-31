@@ -8,28 +8,48 @@ class InvalidPosition(Exception):
 
 
 class Game:
-    def __init__(self, board, speed, pacman_agent=None, ghost_agents=None):
+    def __init__(self, board, speed,
+                 pacman_agent=None, ghost_agents=[], candies=[]):
         self.board = board
-        self.pacman = pacman_agent
-        self.speed = speed
-        self.candies = {}
-
-        if (not ghost_agents):
-            self.ghosts = []
-        else:
-            self.ghosts = ghost_agents
+        # Agents
+        self.initial_pacman = pacman_agent
+        self.initial_ghosts = []
+        for ghost in ghost_agents:
+            self.initial_ghosts.append(ghost)
+        # Candies and pac-dots
+        self.initial_candies = {}
+        for candy in candies:
+            self.initial_candies[candy.current_node.position] = candy
+        self.pac_dot_reward = 1
+        # Other game parameters
         self.plot = None
-        self.game_over = False
+        self.speed = speed
+        # Initialize the game
+        self.reset()
 
     def reset(self):
-        # TODO: there might be other stuff to reset
         self.game_over = False
+        self.pacman = self.initial_pacman
+        self.ghosts = self.initial_ghosts
+        self.candies = self.initial_candies
+        self.initialize_pac_dots()
+
+    def initialize_pac_dots(self):
+        """
+        Pac-dots are stored in a dictionary where the keys are their position
+        and the value their reward.
+        """
+        self.pac_dots = {}
+        for node_pos in self.board.nodes:
+            self.pac_dots[node_pos] = self.pac_dot_reward
 
     def add_pacman(self, agent):
         target_position = agent.current_node.position
         if (target_position in self.board.nodes):
+            self.initial_pacman = agent
             self.pacman = agent
-            self.pacman.current_node.reward = 0
+            # Remove the pac-dot where pacman is initialized
+            del self.pac_dots[self.pacman.current_node.position]
         else:
             raise InvalidPosition("Cannot add agent\
                 to invalid board position")
@@ -37,6 +57,7 @@ class Game:
     def add_ghost(self, agent):
         target_position = agent.current_node.position
         if (target_position in self.board.nodes):
+            self.initial_ghosts.append(agent)
             self.ghosts.append(agent)
         else:
             raise InvalidPosition("Cannot add agent\
@@ -45,6 +66,7 @@ class Game:
     def add_candy(self, candy):
         position = candy.node.position
         if (position in self.board.nodes):
+            self.initial_candies[position] = candy
             self.candies[position] = candy
         else:
             raise InvalidPosition("Cannot add candy\
@@ -100,8 +122,10 @@ class Game:
                     ghost.start_blue()
 
             # Update rewards
-            reward += self.pacman.current_node.reward
-            self.pacman.current_node.reward = 0
+            pos = self.pacman.current_node.position
+            if pos in self.pac_dots:
+                reward += self.pac_dots[pos]
+                del self.pac_dots[pos]
         return reward
 
     def play_game(self):
@@ -114,26 +138,34 @@ class Game:
 
             board_title = 'reward : {}'.format(cum_reward)
             self.draw_state(board_title)
+        return cum_reward
 
     def compute_grid(self):
         # TODO: Store it and only update what changed at the next move
+        pac_dot_value = 4
+        candy_value = 6
+        ghost_value = 5
+        ghost_blue_value = 7
+        ghost_eaten_value = 3
+        pacman_value = 2
+
         current_board = self.board.outline.copy()
-        for position, node in self.board.nodes.items():
-            if (node.reward > 0):
-                current_board[node.position[0], node.position[1]] = 4
-        for row, col in self.candies:
-            current_board[row, col] = 6
+        # Fill the board with the elements
+        for pac_dot_pos in self.pac_dots:
+            current_board[pac_dot_pos] = pac_dot_value
+        for candy_pos in self.candies:
+            current_board[candy_pos] = candy_value
         for ghost in self.ghosts:
-            row, col = ghost.get_position()
+            pos = ghost.get_position()
             if ghost.blue:
                 if ghost.eaten:
-                    current_board[row, col] = 3
+                    current_board[pos] = ghost_eaten_value
                 else:
-                    current_board[row, col] = 7
+                    current_board[pos] = ghost_blue_value
             else:
-                current_board[row, col] = 5
-        pacman_row, pacman_col = self.pacman.get_position()
-        current_board[pacman_row, pacman_col] = 2
+                current_board[pos] = ghost_value
+        current_board[self.pacman.get_position()] = pacman_value
+
         return current_board
 
     def draw_state(self, title):
@@ -163,12 +195,14 @@ class Game:
 
         # Move TODO: take into account candy eating, ghost eating ?
         self.pacman.move(move)
-        reward = self.pacman.current_node.reward
-        self.pacman.current_node.reward = 0
+        pos = self.pacman.current_node.position
+        if pos in self.pac_dots:
+            reward = self.pac_dots[pos]
+            del self.pac_dots[pos]
         state = self.get_state()
 
         # Revert
-        self.pacman.current_node.reward = reward
+        self.pac_dots[pos] = self.pac_dot_reward
         self.pacman.move(initial_node)
 
         return state
