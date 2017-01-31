@@ -115,7 +115,8 @@ class Game:
             board_title = 'reward : {}'.format(cum_reward)
             self.draw_state(board_title)
 
-    def compute_state(self):
+    def compute_grid(self):
+        # TODO: Store it and only update what changed at the next move
         current_board = self.board.outline.copy()
         for position, node in self.board.nodes.items():
             if (node.reward > 0):
@@ -136,7 +137,7 @@ class Game:
         return current_board
 
     def draw_state(self, title):
-        current_board = self.compute_state()
+        current_board = self.compute_grid()
         if self.plot:
             plt.title(title)
             self.plot.set_data(current_board)
@@ -147,4 +148,4 @@ class Game:
         plt.pause(self.speed)
 
     def __str__(self):
-        return str(self.compute_state())
+        return str(self.compute_grid())
