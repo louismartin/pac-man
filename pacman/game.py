@@ -30,12 +30,17 @@ class Game:
 
     def reset(self):
         self.game_over = False
+        self.game_won = False
         self.pacman = copy.deepcopy(self.initial_pacman)
         self.ghosts = copy.deepcopy(self.initial_ghosts)
         self.candies = copy.deepcopy(self.initial_candies)
         self.initialize_pac_dots()
         if self.pacman:
             del self.pac_dots[self.pacman.current_node.position]
+
+    @property
+    def game_finished(self):
+        return self.game_over or self.game_won
 
     def initialize_pac_dots(self):
         """
@@ -129,11 +134,14 @@ class Game:
             if pos in self.pac_dots:
                 reward += self.pac_dots[pos]
                 del self.pac_dots[pos]
+                if (len(self.pac_dots) + len(self.candies)) == 0:
+                    self.game_won = True
+
         return reward
 
     def play_game(self):
         cum_reward = 0
-        while (not self.game_over):
+        while (not self.game_finished):
             # Compute next moves
             move = self.pacman.get_move()
             reward = self.play(move)
@@ -199,13 +207,16 @@ class Game:
         # Move TODO: take into account candy eating, ghost eating ?
         self.pacman.move(move)
         pos = self.pacman.current_node.position
+        revert = False
         if pos in self.pac_dots:
             reward = self.pac_dots[pos]
             del self.pac_dots[pos]
+            revert = True
         state = self.get_state()
 
         # Revert
-        self.pac_dots[pos] = self.pac_dot_reward
+        if revert:
+            self.pac_dots[pos] = reward
         self.pacman.move(initial_node)
 
         return state
