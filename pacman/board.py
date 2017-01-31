@@ -19,8 +19,11 @@ class Node:
             self.children_nodes = children_nodes
 
     def __str__(self):
-        return ' position : {pos} \n children nb : {nb_children} \n'.format(
+        return 'Position: {pos} - Children: {nb_children}'.format(
             nb_children=len(self.children_nodes), pos=self.position)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Board:
