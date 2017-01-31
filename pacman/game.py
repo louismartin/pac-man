@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import copy
 
 from pacman.tools import timeit
 
@@ -29,10 +30,12 @@ class Game:
 
     def reset(self):
         self.game_over = False
-        self.pacman = self.initial_pacman
-        self.ghosts = self.initial_ghosts
-        self.candies = self.initial_candies
+        self.pacman = copy.deepcopy(self.initial_pacman)
+        self.ghosts = copy.deepcopy(self.initial_ghosts)
+        self.candies = copy.deepcopy(self.initial_candies)
         self.initialize_pac_dots()
+        if self.pacman:
+            del self.pac_dots[self.pacman.current_node.position]
 
     def initialize_pac_dots(self):
         """
@@ -47,7 +50,7 @@ class Game:
         target_position = agent.current_node.position
         if (target_position in self.board.nodes):
             self.initial_pacman = agent
-            self.pacman = agent
+            self.pacman = copy.deepcopy(agent)
             # Remove the pac-dot where pacman is initialized
             del self.pac_dots[self.pacman.current_node.position]
         else:
@@ -58,7 +61,7 @@ class Game:
         target_position = agent.current_node.position
         if (target_position in self.board.nodes):
             self.initial_ghosts.append(agent)
-            self.ghosts.append(agent)
+            self.ghosts.append(copy.deepcopy(agent))
         else:
             raise InvalidPosition("Cannot add agent\
                 to invalid board position")
@@ -67,7 +70,7 @@ class Game:
         position = candy.node.position
         if (position in self.board.nodes):
             self.initial_candies[position] = candy
-            self.candies[position] = candy
+            self.candies[position] = copy.deepcopy(candy)
         else:
             raise InvalidPosition("Cannot add candy\
                 to invalid board position")
