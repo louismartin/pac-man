@@ -18,8 +18,11 @@ class Node:
             self.children_nodes = children_nodes
 
     def __str__(self):
-        return 'Position: {pos} - Children: {nb_children}'.format(
-            nb_children=len(self.children_nodes), pos=self.position)
+        string = 'Position: {pos} - Children: {children}'.format(
+            pos=self.position,
+            children=[child.position for child in self.children_nodes]
+        )
+        return string
 
     def __repr__(self):
         return self.__str__()
