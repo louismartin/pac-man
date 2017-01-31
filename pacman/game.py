@@ -19,11 +19,17 @@ class Game:
         else:
             self.ghosts = ghost_agents
         self.plot = None
+        self.game_over = False
+
+    def reset(self):
+        # TODO: there might be other stuff to reset
+        self.game_over = False
 
     def add_pacman(self, agent):
         target_position = agent.current_node.position
         if (target_position in self.board.nodes):
             self.pacman = agent
+            self.pacman.current_node.reward = 0
         else:
             raise InvalidPosition("Cannot add agent\
                 to invalid board position")
@@ -99,7 +105,6 @@ class Game:
         return reward
 
     def play_game(self):
-        self.game_over = False
         cum_reward = 0
         while (not self.game_over):
             # Compute next moves
