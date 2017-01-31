@@ -147,5 +147,31 @@ class Game:
             self.plot = plt.matshow(current_board, fignum=0)
         plt.pause(self.speed)
 
+    def get_state(self):
+        """Returns a hashable representation of the current state"""
+        # TODO: Ghosts hide candies in this state representation
+        hashable_state = tuple(self.compute_grid().flatten())
+        return hashable_state
+
+    def legal_moves(self):
+        return self.pacman.current_node.children_nodes
+
+    def next_state(self, move):
+        """Get next hashable state for move being the next pacman node"""
+        # Save variables for reverting
+        initial_node = self.pacman.current_node
+
+        # Move TODO: take into account candy eating, ghost eating ?
+        self.pacman.move(move)
+        reward = self.pacman.current_node.reward
+        self.pacman.current_node.reward = 0
+        state = self.get_state()
+
+        # Revert
+        self.pacman.current_node.reward = reward
+        self.pacman.move(initial_node)
+
+        return state
+
     def __str__(self):
         return str(self.compute_grid())
