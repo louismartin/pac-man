@@ -150,19 +150,20 @@ class MCTS:
         """Trains the algorithms for train_time seconds"""
         start_time = time.time()
         simu_count = 0
-        while (time.time() - start_time) < train_time:
+        running_time = int(time.time() - start_time)
+        while running_time < train_time:
             if simu_count % 100 == 0:
                 display = True
                 print("Simulations: {} - Time: {}s".format(
-                      simu_count, int(time.time() - start_time)))
+                      simu_count, running_time))
             else:
                 display = False
 
             # Run one simulation
             self.run_simulation(display=display)
             simu_count += 1
-        print("Simulations: {} - Time: {}s".format(
-              simu_count, int(time.time() - start_time)))
+            running_time = int(time.time() - start_time)
+        print("Simulations: {} - Time: {}s".format(simu_count, running_time))
 
     def display(self, cum_reward, display):
         if display:
