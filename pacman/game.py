@@ -29,9 +29,8 @@ class Game:
         self.reset()
 
     def reset(self):
-        # TODO: rename game_* to *
-        self.game_over = False
-        self.game_won = False
+        self.lost = False
+        self.won = False
         self.pacman = copy.deepcopy(self.initial_pacman)
         self.ghosts = copy.deepcopy(self.initial_ghosts)
         self.candies = copy.deepcopy(self.initial_candies)
@@ -40,8 +39,8 @@ class Game:
             del self.pac_dots[self.pacman.current_node.position]
 
     @property
-    def game_finished(self):
-        return self.game_over or self.game_won
+    def finished(self):
+        return self.lost or self.won
 
     def initialize_pac_dots(self):
         """
@@ -96,7 +95,7 @@ class Game:
         """Check if ghost eats the pacman or the contrary"""
         reward = 0
         if (not ghost.blue):
-            self.game_over = True
+            self.lost = True
         elif(ghost.blue and not ghost.eaten):
             reward += pacman.eat_ghost(ghost)
         return reward
@@ -123,7 +122,7 @@ class Game:
         reward += self.check_collision(self.pacman, self.ghosts)
 
         # Check if the pacman is still alive to go forth with the events
-        if not self.game_over:
+        if not self.lost:
             # Check if candy is eaten
             if self.pacman.current_node.position in self.candies:
                 del self.candies[self.pacman.current_node.position]
@@ -136,13 +135,13 @@ class Game:
                 reward += self.pac_dots[pos]
                 del self.pac_dots[pos]
                 if (len(self.pac_dots) + len(self.candies)) == 0:
-                    self.game_won = True
+                    self.won = True
 
         return reward
 
     def play_game(self):
         cum_reward = 0
-        while (not self.game_finished):
+        while (not self.finished):
             # Compute next moves
             move = self.pacman.get_move()
             reward = self.play(move)
