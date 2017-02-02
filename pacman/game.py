@@ -1,5 +1,7 @@
-from matplotlib import pyplot as plt
 import copy
+
+from matplotlib import pyplot as plt
+import numpy as np
 
 from pacman.tools import timeit
 
@@ -9,9 +11,11 @@ class InvalidPosition(Exception):
 
 
 class Game:
-    def __init__(self, board, speed,
+    def __init__(self, board, speed, max_plays=np.inf,
                  pacman_agent=None, ghost_agents=[], candies=[]):
         self.board = board
+        self.speed = speed
+        self.max_plays = max_plays
         # Agents
         self.initial_pacman = pacman_agent
         self.initial_ghosts = []
@@ -24,11 +28,11 @@ class Game:
         self.pac_dot_reward = 1
         # Other game parameters
         self.plot = None
-        self.speed = speed
         # Initialize the game
         self.reset()
 
     def reset(self):
+        self.n_plays = 0
         self.lost = False
         self.won = False
         self.pacman = copy.deepcopy(self.initial_pacman)
@@ -136,6 +140,11 @@ class Game:
                 del self.pac_dots[pos]
                 if (len(self.pac_dots) + len(self.candies)) == 0:
                     self.won = True
+
+        # Check if we did not reach the maximum number of plays
+        self.n_plays += 1
+        if self.n_plays > self.max_plays:
+            self.lost = True
 
         return reward
 
