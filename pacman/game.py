@@ -29,6 +29,7 @@ class Game:
         self.reset()
 
     def reset(self):
+        # TODO: rename game_* to *
         self.game_over = False
         self.game_won = False
         self.pacman = copy.deepcopy(self.initial_pacman)
