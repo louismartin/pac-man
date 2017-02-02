@@ -7,14 +7,18 @@ class TreeNode:
     def __init__(self):
         self.wins = 0
         self.losses = 0
-        self.n_visits = 1
+        self.n_visits = 0
         self.children = []
 
         self.score = 0
 
     def UCB_score(self, t):
-        mean = self.wins/self.n_visits
-        score = mean + np.sqrt(np.log(t)/(2*self.n_visits))
+        if self.n_visits == 0:
+            # If the node was never visited, we need to visit it
+            score = np.inf
+        else:
+            mean = self.wins/self.n_visits
+            score = mean + np.sqrt(np.log(t)/(2*self.n_visits))
         self.score = score
         return score
 
@@ -40,17 +44,20 @@ class Tree:
         self.nodes = {}
 
     def visit(self, state):
-        if state in self.nodes:
-            self.nodes[state].n_visits += 1
-        else:
+        if state not in self.nodes:
             self.nodes[state] = TreeNode()
+        self.nodes[state].n_visits += 1
 
     def is_visited(self, state):
         visited = state in self.nodes
         return visited
 
     def get_node(self, state):
-        return self.nodes[state]
+        if state in self.nodes:
+            node = self.nodes[state]
+        else:
+            node = TreeNode()
+        return node
 
     def update(self, state, win):
         if win:
@@ -64,11 +71,33 @@ class MCTS:
         self.game = game
         self.tree = Tree()
 
-    def choose_next_node(self, next_nodes, t):
+    def select(self):
+        """Select a child node from the current node using UCB"""
+        # TODO: if state is already visited, legal_moves are known and are
+        # the children of the current node (need to link nodes in tree)
+        legal_moves = self.game.legal_moves()
+        # States are keys to next nodes
+        next_states = [self.game.next_state(move) for move in legal_moves]
+        next_nodes = [self.tree.get_node(state) for state in next_states]
+
+        # Choose a move based on the node it will lead to
+        t = self.tree.get_node(self.current_state).n_visits
         scores = [node.UCB_score(t) for node in next_nodes]
-        indices = np.argwhere(scores == np.max(scores)).flatten()
+        indexes = np.argwhere(scores == np.max(scores)).flatten()
         # choose one of the argmax at random
-        return np.random.choice(indices)
+        index = np.random.choice(indexes)
+        next_state = next_states[index]
+        move = legal_moves[index]
+        return move, next_state
+
+    def self_select(self):
+        """Play a move in self-play mode (nodes were never visited)"""
+        legal_moves = self.game.legal_moves()
+        # Choose next move at random
+        # TODO: Use a simple heuristic
+        index = randint(0, len(legal_moves)-1)
+        move = legal_moves[index]
+        return move
 
     def backpropagate(self, path, win):
         for state in path:
@@ -79,74 +108,73 @@ class MCTS:
         cum_reward = 0
 
         # Start from root
-        state = self.game.get_state()
-        path = [state]
-        self.tree.visit(state)
+        self.current_state = self.game.get_state()
+        path = [self.current_state]
+        self.tree.visit(self.current_state)
+
         n_plays = 0
-        if display:
-            board_title = 'reward : {}'.format(cum_reward)
-            self.game.draw_state(board_title)
-        while not (self.game.game_finished):
-            legal_moves = self.game.legal_moves()
-            # States are keys to next nodes
-            next_states = [self.game.next_state(move) for move in legal_moves]
-            visited = [self.tree.is_visited(state) for state in next_states]
-            if all(visited):
-                next_nodes = [self.tree.get_node(state) for state
-                              in next_states]
+        self.display(cum_reward, display)
 
-                # Choose a move based on the node it will lead to
-                t = self.tree.get_node(state).n_visits
-                i = self.choose_next_node(next_nodes, t)
-                next_state = next_states[i]
-                move = legal_moves[i]
-                # print("Next states: {} - t={}".format(
-                #     [self.tree.get_node(state) for state in next_states], t))
-                # print("Chosen: {}".format(self.tree.get_node(next_state)))
-            else:
-                # At least one state has not been explored, choose the first
-                for i, state in enumerate(next_states):
-                    if not self.tree.is_visited(state):
-                        next_state = state
-                        move = legal_moves[i]
-                        break
-
-            # Append the state before the ghosts move
+        # (1) Selection step: Traverse until we select a child not in the tree
+        move, next_state = self.select()
+        while self.tree.is_visited(next_state) and not self.game.game_finished:
+            # Visit the state before the ghosts move
             self.tree.visit(next_state)
             path.append(next_state)
 
             reward = self.game.play(move)
+            self.current_state = next_state
             cum_reward += reward
             n_plays += 1
-
+            self.display(cum_reward, display)
             # Append the state after the ghosts move
             # state = self.game.get_state()
             # self.tree.visit(next_state)
             # path.append(state)
 
-            if display:
-                board_title = 'reward : {}'.format(cum_reward)
-                self.game.draw_state(board_title)
-
+            move, next_state = self.select()
             if n_plays >= max_plays:
+                # TODO: n_plays and max_plays handled inside game
                 self.game.game_over = True
+
+        # (2) Expansion step: Add this child to the tree
+        self.tree.visit(next_state)
+        path.append(next_state)
+
+        # (3) Simulation step: Self-play until the end of the game
+        while not self.game.game_finished:
+            reward = self.game.play(move)
+            cum_reward += reward
+            n_plays += 1
+            self.display(cum_reward, display)
+            if n_plays >= max_plays:
+                # TODO: n_plays and max_plays handled inside game
+                self.game.game_over = True
+
+        # (4) Backpropagation step: Backpropagate to the traversed nodes
+        # TODO: Backpropagate the reward instead of win/loss
         win = self.game.game_won
         self.backpropagate(path, win)
 
     def train(self, train_time):
         """Trains the algorithms for train_time seconds"""
         start_time = time.time()
-        n_simulations = 0
+        simu_count = 0
         while (time.time() - start_time) < train_time:
-            if n_simulations % 100 == 0:
+            if simu_count % 100 == 0:
                 display = True
                 print("Simulations: {} - Time: {}s".format(
-                      n_simulations, int(time.time() - start_time)))
+                      simu_count, int(time.time() - start_time)))
             else:
                 display = False
 
             # Run one simulation
             self.run_simulation(display=display)
-            n_simulations += 1
+            simu_count += 1
         print("Simulations: {} - Time: {}s".format(
-              n_simulations, int(time.time() - start_time)))
+              simu_count, int(time.time() - start_time)))
+
+    def display(self, cum_reward, display):
+        if display:
+            board_title = 'reward : {}'.format(cum_reward)
+            self.game.draw_state(board_title)
