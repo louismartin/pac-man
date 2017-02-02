@@ -117,7 +117,7 @@ class MCTS:
 
         # (1) Selection step: Traverse until we select a child not in the tree
         move, next_state = self.select()
-        while self.tree.is_visited(next_state) and not self.game.game_finished:
+        while self.tree.is_visited(next_state) and not self.game.finished:
             # Visit the state before the ghosts move
             self.tree.visit(next_state)
             path.append(next_state)
@@ -135,25 +135,25 @@ class MCTS:
             move, next_state = self.select()
             if n_plays >= max_plays:
                 # TODO: n_plays and max_plays handled inside game
-                self.game.game_over = True
+                self.game.lost = True
 
         # (2) Expansion step: Add this child to the tree
         self.tree.visit(next_state)
         path.append(next_state)
 
         # (3) Simulation step: Self-play until the end of the game
-        while not self.game.game_finished:
+        while not self.game.finished:
             reward = self.game.play(move)
             cum_reward += reward
             n_plays += 1
             self.display(cum_reward, display)
             if n_plays >= max_plays:
                 # TODO: n_plays and max_plays handled inside game
-                self.game.game_over = True
+                self.game.lost = True
 
         # (4) Backpropagation step: Backpropagate to the traversed nodes
         # TODO: Backpropagate the reward instead of win/loss
-        win = self.game.game_won
+        win = self.game.won
         self.backpropagate(path, win)
 
     def train(self, train_time):
