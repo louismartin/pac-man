@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from pacman.agents import PacMan, Ghost
-from pacman.board import Action, Candy, Node
+from pacman.board import Candy, Node
 
 
 class Game:
@@ -113,7 +113,6 @@ class Game:
             reward += pacman.eat_ghost(ghost)
         return reward
 
-    # TODO: Rename move to action to fit the enum
     def play(self, action):
         """
         Play one move
@@ -221,8 +220,8 @@ class Game:
         current_node = self.pacman.current_node
         legal_actions = []
         for child_node in current_node.children_nodes:
-            action_value = Node.relative_position(current_node, child_node)
-            legal_actions.append(Action(action_value))
+            action = Node.nodes_to_action(current_node, child_node)
+            legal_actions.append(action)
         return legal_actions
 
     def next_state(self, action):

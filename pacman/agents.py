@@ -1,6 +1,6 @@
 from random import randint
 
-from pacman.board import Node, Action, InvalidPosition
+from pacman.board import Node, InvalidPosition
 
 
 class Agent:
@@ -15,8 +15,8 @@ class Agent:
     def get_action(self):
         children_nodes = self.current_node.children_nodes
         next_node = children_nodes[randint(0, len(children_nodes) - 1)]
-        action_value = Node.relative_position(self.current_node, next_node)
-        return Action(action_value)
+        action = Node.nodes_to_action(self.current_node, next_node)
+        return action
 
     def move(self, action):
         next_position = (self.position[0] + action.value[0],

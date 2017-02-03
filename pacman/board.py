@@ -31,16 +31,14 @@ class Node:
             self.children_nodes = children_nodes
 
     @staticmethod
-    def relative_position(node_1, node_2):
-        """
-        Example: node_1.position = (4, 3), node_1.position = (5, 3)
-        relative_position = (1, 0)
-        """
+    def nodes_to_action(node_1, node_2):
+        """Returns the action to take to go from node_1 to node_2"""
         relative_position = (
             node_2.position[0] - node_1.position[0],
             node_2.position[1] - node_1.position[1]
         )
-        return relative_position
+        action = Action(relative_position)
+        return action
 
     def __str__(self):
         string = 'Position: {pos} - Children: {children}'.format(
