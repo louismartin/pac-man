@@ -33,8 +33,9 @@ class Agent:
         if next_node:
             self.current_node = next_node
         else:
-            raise InvalidPosition("Cannot move agent\
-                to position {}".format(next_position))
+            error_msg = "Cannot take action {} to go from position {} \
+                to position {}".format(action, self.position, next_position)
+            raise InvalidPosition(error_msg)
 
     def get_position(self):
         return self.current_node.position
