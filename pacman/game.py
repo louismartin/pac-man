@@ -130,8 +130,8 @@ class Game:
         reward += self.check_collision(self.pacman, self.ghosts)
         # Move the ghosts
         for ghost in self.ghosts:
-            move = ghost.get_move()
-            ghost.move(move)
+            action = ghost.get_action()
+            ghost.move(action)
         # Check for collision after moving the ghosts
         reward += self.check_collision(self.pacman, self.ghosts)
 
@@ -164,8 +164,8 @@ class Game:
         self.draw_state(board_title)
         while (not self.finished):
             # Compute next moves
-            move = self.pacman.get_move()
-            reward = self.play(move)
+            action = self.pacman.get_action()
+            reward = self.play(action)
             cum_reward += reward
 
             board_title = 'reward : {}'.format(cum_reward)
@@ -218,10 +218,12 @@ class Game:
         return hashable_state
 
     def legal_moves(self):
+        # TODO: return actions
         return self.pacman.current_node.children_nodes
 
     def next_state(self, move):
         """Get next hashable state for move being the next pacman node"""
+        # TODO: Replace with actions
         # Save variables for reverting
         initial_node = self.pacman.current_node
 
