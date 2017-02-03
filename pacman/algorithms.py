@@ -1,4 +1,5 @@
 import time
+from random import randint
 
 import numpy as np
 
@@ -140,6 +141,7 @@ class MCTS:
             reward = self.game.play(move)
             cum_reward += reward
             self.display(cum_reward, display)
+            move = self.self_select()
 
         # (4) Backpropagation step: Backpropagate to the traversed nodes
         # TODO: Backpropagate the reward instead of win/loss

@@ -5,7 +5,7 @@ from pacman.game import Game
 
 board = Board('boards/3x3_board.txt')
 game_speed = 0.01
-game = Game(board, game_speed)
+game = Game(board, game_speed, max_plays=10)
 
 # Create agents and add them to game
 pacman_init_node = board.nodes[(0, 0)]
