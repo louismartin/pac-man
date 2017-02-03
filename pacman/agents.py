@@ -1,17 +1,41 @@
 from random import randint
 
+from pacman.board import Node
+from pacman.game import InvalidPosition, Action
+
 
 class Agent:
     def __init__(self, current_node=None):
         self.current_node = current_node
 
+    # TODO: Replace all current_node.position with position
+    @property
+    def position(self):
+        return self.current_node.position
+
     def get_move(self):
         children_nodes = self.current_node.children_nodes
         next_node = children_nodes[randint(0, len(children_nodes) - 1)]
-        return next_node
+        action_value = Node.relative_position(self.current_node, next_node)
+        return Action(action_value)
 
-    def move(self, node):
-        self.current_node = node
+    def move(self, action):
+        next_position = (self.position[0] + action.value[0],
+                         self.position[1] + action.value[1])
+
+        # Find the node corresponding to next_position
+        next_node = None
+        for child_node in self.current_node.children_nodes:
+            if child_node.position == next_position:
+                next_node = child_node
+                break
+
+        # Check if we found the next node
+        if next_node:
+            self.current_node = next_node
+        else:
+            raise InvalidPosition("Cannot move agent\
+                to position {}".format(next_position))
 
     def get_position(self):
         return self.current_node.position
@@ -24,15 +48,15 @@ class Ghost(Agent):
         self.eaten = False
         self.blue_time_left = 0
 
-    def move(self, node):
-        self.current_node = node
-        if(self.blue_time_left):
+    def move(self, action):
+        super(Ghost, self).move(action)
+        if (self.blue_time_left):
             self.blue_time_left -= 1
-        if(not self.blue_time_left):
+        if (not self.blue_time_left):
             self.blue = False
             self.eaten = False
 
-    def start_blue(self, blue_time_left=100):
+    def start_blue(self, blue_time_left=10):
         self.blue = True
         self.eaten = False
         self.blue_time_left = blue_time_left
