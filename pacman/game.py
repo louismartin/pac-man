@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from pacman.agents import PacMan, Ghost
-from pacman.board import Action, Candy
+from pacman.board import Action, Candy, Node
 
 
 class Game:
@@ -217,18 +217,21 @@ class Game:
         hashable_state = tuple(self.compute_grid().flatten())
         return hashable_state
 
-    def legal_moves(self):
-        # TODO: return actions
-        return self.pacman.current_node.children_nodes
+    def legal_actions(self):
+        current_node = self.pacman.current_node
+        legal_actions = []
+        for child_node in current_node.children_nodes:
+            action_value = Node.relative_position(current_node, child_node)
+            legal_actions.append(Action(action_value))
+        return legal_actions
 
-    def next_state(self, move):
-        """Get next hashable state for move being the next pacman node"""
-        # TODO: Replace with actions
+    def next_state(self, action):
+        """Get next hashable state for the considered action"""
         # Save variables for reverting
         initial_node = self.pacman.current_node
 
         # Move TODO: take into account candy eating, ghost eating ?
-        self.pacman.move(move)
+        self.pacman.move(action)
         pos = self.pacman.current_node.position
         revert = False
         if pos in self.pac_dots:
@@ -240,7 +243,7 @@ class Game:
         # Revert
         if revert:
             self.pac_dots[pos] = reward
-        self.pacman.move(initial_node)
+        self.pacman.current_node = initial_node
 
         return state
 

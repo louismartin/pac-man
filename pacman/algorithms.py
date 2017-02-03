@@ -74,31 +74,31 @@ class MCTS:
 
     def select(self):
         """Select a child node from the current node using UCB"""
-        # TODO: if state is already visited, legal_moves are known and are
+        # TODO: if state is already visited, legal_actions are known and are
         # the children of the current node (need to link nodes in tree)
-        legal_moves = self.game.legal_moves()
+        legal_actions = self.game.legal_actions()
         # States are keys to next nodes
-        next_states = [self.game.next_state(move) for move in legal_moves]
+        next_states = [self.game.next_state(a) for a in legal_actions]
         next_nodes = [self.tree.get_node(state) for state in next_states]
 
-        # Choose a move based on the node it will lead to
+        # Choose an action based on the node it will lead to
         t = self.tree.get_node(self.current_state).n_visits
         scores = [node.UCB_score(t) for node in next_nodes]
         indexes = np.argwhere(scores == np.max(scores)).flatten()
         # choose one of the argmax at random
         index = np.random.choice(indexes)
         next_state = next_states[index]
-        move = legal_moves[index]
-        return move, next_state
+        action = legal_actions[index]
+        return action, next_state
 
     def self_select(self):
-        """Play a move in self-play mode (nodes were never visited)"""
-        legal_moves = self.game.legal_moves()
-        # Choose next move at random
+        """Play an action in self-play mode (nodes were never visited)"""
+        legal_actions = self.game.legal_actions()
+        # Choose next action at random
         # TODO: Use a simple heuristic
-        index = randint(0, len(legal_moves)-1)
-        move = legal_moves[index]
-        return move
+        index = randint(0, len(legal_actions)-1)
+        action = legal_actions[index]
+        return action
 
     def backpropagate(self, path, win):
         for state in path:
@@ -115,13 +115,13 @@ class MCTS:
         self.display(cum_reward, display)
 
         # (1) Selection step: Traverse until we select a child not in the tree
-        move, next_state = self.select()
+        action, next_state = self.select()
         while self.tree.is_visited(next_state) and not self.game.finished:
             # Visit the state before the ghosts move
             self.tree.visit(next_state)
             path.append(next_state)
 
-            reward = self.game.play(move)
+            reward = self.game.play(action)
             self.current_state = next_state
             cum_reward += reward
             self.display(cum_reward, display)
@@ -130,7 +130,7 @@ class MCTS:
             # self.tree.visit(next_state)
             # path.append(state)
 
-            move, next_state = self.select()
+            action, next_state = self.select()
 
         # (2) Expansion step: Add this child to the tree
         self.tree.visit(next_state)
@@ -138,10 +138,10 @@ class MCTS:
 
         # (3) Simulation step: Self-play until the end of the game
         while not self.game.finished:
-            reward = self.game.play(move)
+            reward = self.game.play(action)
             cum_reward += reward
             self.display(cum_reward, display)
-            move = self.self_select()
+            action = self.self_select()
 
         # (4) Backpropagation step: Backpropagate to the traversed nodes
         # TODO: Backpropagate the reward instead of win/loss
