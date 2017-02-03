@@ -21,6 +21,10 @@ class Candy:
         self.node = node
         self.effect = effect
 
+    @property
+    def position(self):
+        return self.node.position
+
 
 class Node:
     def __init__(self, position, children_nodes=None):

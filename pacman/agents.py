@@ -7,7 +7,6 @@ class Agent:
     def __init__(self, node):
         self.current_node = node
 
-    # TODO: Replace all current_node.position with position
     @property
     def position(self):
         return self.current_node.position
@@ -36,9 +35,6 @@ class Agent:
             error_msg = "Cannot take action {} to go from position {} \
                 to position {}".format(action, self.position, next_position)
             raise InvalidPosition(error_msg)
-
-    def get_position(self):
-        return self.current_node.position
 
 
 class Ghost(Agent):
