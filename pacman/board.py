@@ -1,4 +1,19 @@
+from enum import Enum, unique
+
 import numpy as np
+
+
+@unique
+class Action(Enum):
+    """In the format (row, col), (0, 0) is the top left cell"""
+    UP = (-1, 0)
+    DOWN = (1, 0)
+    LEFT = (0, -1)
+    RIGHT = (0, 1)
+
+
+class InvalidPosition(Exception):
+    pass
 
 
 class Candy:
