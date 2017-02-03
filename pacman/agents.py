@@ -12,7 +12,7 @@ class Agent:
     def position(self):
         return self.current_node.position
 
-    def get_move(self):
+    def get_action(self):
         children_nodes = self.current_node.children_nodes
         next_node = children_nodes[randint(0, len(children_nodes) - 1)]
         action_value = Node.relative_position(self.current_node, next_node)
