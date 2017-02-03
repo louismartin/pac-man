@@ -1,21 +1,10 @@
 import copy
-from enum import Enum, unique
 
 from matplotlib import pyplot as plt
 import numpy as np
 
-
-class InvalidPosition(Exception):
-    pass
-
-
-@unique
-class Action(Enum):
-    """In the format (row, col), (0, 0) is the top left cell"""
-    UP = (-1, 0)
-    DOWN = (1, 0)
-    LEFT = (0, -1)
-    RIGHT = (0, 1)
+from pacman.agents import PacMan, Ghost
+from pacman.board import Action, Candy
 
 
 class Game:
@@ -62,6 +51,18 @@ class Game:
         self.pac_dots = {}
         for node_pos in self.board.nodes:
             self.pac_dots[node_pos] = self.pac_dot_reward
+
+    def add(self, name, position):
+        name = name.lower()
+        init_node = self.board.nodes[position]
+        if name == "pacman":
+            self.add_pacman(PacMan(init_node))
+        elif name == "ghost":
+            self.add_ghost(Ghost(init_node))
+        elif name == "candy":
+            self.add_candy(Candy(init_node))
+        else:
+            raise KeyError("Invalid element: {}".format(name))
 
     def add_pacman(self, agent):
         target_position = agent.current_node.position

@@ -1,12 +1,11 @@
 from random import randint
 
-from pacman.board import Node
-from pacman.game import InvalidPosition, Action
+from pacman.board import Node, Action, InvalidPosition
 
 
 class Agent:
-    def __init__(self, current_node=None):
-        self.current_node = current_node
+    def __init__(self, node):
+        self.current_node = node
 
     # TODO: Replace all current_node.position with position
     @property
@@ -42,8 +41,8 @@ class Agent:
 
 
 class Ghost(Agent):
-    def __init__(self, current_node, blue=False):
-        super().__init__(current_node)
+    def __init__(self, node, blue=False):
+        super().__init__(node)
         self.blue = blue
         self.eaten = False
         self.blue_time_left = 0
@@ -68,9 +67,6 @@ class Ghost(Agent):
 
 
 class PacMan(Agent):
-    def __init__(self, current_node):
-        super().__init__(current_node)
-
     def eat_ghost(self, ghost, reward=10):
         ghost.eaten = True
         return reward

@@ -6,22 +6,11 @@ from pacman.game import Game, Action
 board = Board('boards/simple_board.txt')
 game = Game(board)
 
-# Create agents and add them to game
-pacman_init_node = board.nodes[(5, 5)]
-pacman = PacMan(pacman_init_node)
-game.add_pacman(pacman)
-
-ghost1_init_node = board.nodes[(0, 0)]
-ghost1 = Ghost(ghost1_init_node)
-game.add_ghost(ghost1)
-
-ghost2_init_node = board.nodes[(0, 5)]
-ghost2 = Ghost(ghost2_init_node)
-game.add_ghost(ghost2)
-
-candy1_node = board.nodes[(5, 3)]
-candy1 = Candy(candy1_node)
-game.add_candy(candy1)
+# Add agents to the game
+game.add("PacMan", position=(5, 5))
+game.add("Ghost", position=(0, 0))
+game.add("Ghost", position=(0, 5))
+game.add("Candy", position=(5, 3))
 
 
 actions = {'w': Action.UP, 's': Action.DOWN,

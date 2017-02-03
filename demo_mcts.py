@@ -8,9 +8,7 @@ game_speed = 0.01
 game = Game(board, game_speed, max_plays=10)
 
 # Create agents and add them to game
-pacman_init_node = board.nodes[(0, 0)]
-pacman = PacMan(pacman_init_node)
-game.add_pacman(pacman)
+game.add("PacMan", position=(0, 0))
 
 mcts = MCTS(game)
 mcts.train(train_time=10)
