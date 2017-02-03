@@ -1,17 +1,25 @@
 import copy
+from enum import Enum, unique
 
 from matplotlib import pyplot as plt
 import numpy as np
-
-from pacman.tools import timeit
 
 
 class InvalidPosition(Exception):
     pass
 
 
+@unique
+class Action(Enum):
+    """In the format (row, col), (0, 0) is the top left cell"""
+    UP = (-1, 0)
+    DOWN = (1, 0)
+    LEFT = (0, -1)
+    RIGHT = (0, 1)
+
+
 class Game:
-    def __init__(self, board, speed, max_plays=np.inf,
+    def __init__(self, board, speed=0.0001, max_plays=np.inf,
                  pacman_agent=None, ghost_agents=[], candies=[]):
         self.board = board
         self.speed = speed
@@ -104,7 +112,8 @@ class Game:
             reward += pacman.eat_ghost(ghost)
         return reward
 
-    def play(self, move):
+    # TODO: Rename move to action to fit the enum
+    def play(self, action):
         """
         Play one move
         Args:
@@ -114,7 +123,7 @@ class Game:
         """
         reward = 0
         # Move the pacman
-        self.pacman.move(move)
+        self.pacman.move(action)
 
         # Check for collision before moving the ghosts
         reward += self.check_collision(self.pacman, self.ghosts)
@@ -150,6 +159,8 @@ class Game:
 
     def play_game(self):
         cum_reward = 0
+        board_title = 'reward : {}'.format(cum_reward)
+        self.draw_state(board_title)
         while (not self.finished):
             # Compute next moves
             move = self.pacman.get_move()
