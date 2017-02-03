@@ -21,7 +21,7 @@ class Game:
         # Candies and pac-dots
         self.initial_candies = {}
         for candy in candies:
-            self.initial_candies[candy.current_node.position] = candy
+            self.initial_candies[candy.position] = candy
         self.pac_dot_reward = 1
         # Other game parameters
         self.plot = None
@@ -37,7 +37,7 @@ class Game:
         self.candies = copy.deepcopy(self.initial_candies)
         self.initialize_pac_dots()
         if self.pacman:
-            del self.pac_dots[self.pacman.current_node.position]
+            del self.pac_dots[self.pacman.position]
 
     @property
     def finished(self):
@@ -65,18 +65,18 @@ class Game:
             raise KeyError("Invalid element: {}".format(name))
 
     def add_pacman(self, agent):
-        target_position = agent.current_node.position
+        target_position = agent.position
         if (target_position in self.board.nodes):
             self.initial_pacman = agent
             self.pacman = copy.deepcopy(agent)
             # Remove the pac-dot where pacman is initialized
-            del self.pac_dots[self.pacman.current_node.position]
+            del self.pac_dots[self.pacman.position]
         else:
             raise InvalidPosition("Cannot add agent\
                 to invalid board position")
 
     def add_ghost(self, agent):
-        target_position = agent.current_node.position
+        target_position = agent.position
         if (target_position in self.board.nodes):
             self.initial_ghosts.append(agent)
             self.ghosts.append(copy.deepcopy(agent))
@@ -85,7 +85,7 @@ class Game:
                 to invalid board position")
 
     def add_candy(self, candy):
-        position = candy.node.position
+        position = candy.position
         if (position in self.board.nodes):
             self.initial_candies[position] = candy
             self.candies[position] = copy.deepcopy(candy)
@@ -98,7 +98,7 @@ class Game:
         reward = 0
         for ghost in ghosts:
             # Check if pacman meets a ghost
-            if pacman.current_node.position == ghost.current_node.position:
+            if pacman.position == ghost.position:
                 # Check if ghost eats the pacman or the contrary
                 reward = self.resolve_collision(ghost, pacman)
                 break
@@ -137,13 +137,13 @@ class Game:
         # Check if the pacman is still alive to go forth with the events
         if not self.lost:
             # Check if candy is eaten
-            if self.pacman.current_node.position in self.candies:
-                del self.candies[self.pacman.current_node.position]
+            if self.pacman.position in self.candies:
+                del self.candies[self.pacman.position]
                 for ghost in self.ghosts:
                     ghost.start_blue()
 
             # Update rewards
-            pos = self.pacman.current_node.position
+            pos = self.pacman.position
             if pos in self.pac_dots:
                 reward += self.pac_dots[pos]
                 del self.pac_dots[pos]
@@ -187,7 +187,7 @@ class Game:
         for candy_pos in self.candies:
             current_board[candy_pos] = candy_value
         for ghost in self.ghosts:
-            pos = ghost.get_position()
+            pos = ghost.position
             if ghost.blue:
                 if ghost.eaten:
                     current_board[pos] = ghost_eaten_value
@@ -195,7 +195,7 @@ class Game:
                     current_board[pos] = ghost_blue_value
             else:
                 current_board[pos] = ghost_value
-        current_board[self.pacman.get_position()] = pacman_value
+        current_board[self.pacman.position] = pacman_value
 
         return current_board
 
@@ -231,7 +231,7 @@ class Game:
 
         # Move TODO: take into account candy eating, ghost eating ?
         self.pacman.move(action)
-        pos = self.pacman.current_node.position
+        pos = self.pacman.position
         revert = False
         if pos in self.pac_dots:
             reward = self.pac_dots[pos]
