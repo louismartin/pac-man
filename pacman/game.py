@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from pacman.agents import PacMan, Ghost
-from pacman.board import Candy, Node
+from pacman.board import Candy, Node, InvalidPosition
 
 
 class Game:
@@ -54,6 +54,8 @@ class Game:
 
     def add(self, name, position):
         name = name.lower()
+        if position not in self.board.nodes:
+            raise InvalidPosition("Invalid board position {}".format(position))
         init_node = self.board.nodes[position]
         if name == "pacman":
             self.add_pacman(PacMan(init_node))
