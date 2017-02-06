@@ -6,31 +6,29 @@ import numpy as np
 
 class TreeNode:
     def __init__(self):
-        self.wins = 0
-        self.losses = 0
+        self.empirical_mean = 0
         self.n_visits = 0
-        self.children = []
-
         self.score = 0
+
+    def visit(self):
+        self.n_visits += 1
+
+    def update(self, cum_reward):
+        n = self.n_visits
+        self.empirical_mean = self.empirical_mean * (n-1)/n + cum_reward/n
 
     def UCB_score(self, t):
         if self.n_visits == 0:
             # If the node was never visited, we need to visit it
             score = np.inf
         else:
-            mean = self.wins/self.n_visits
-            score = mean + np.sqrt(np.log(t)/(2*self.n_visits))
+            score = self.empirical_mean + np.sqrt(np.log(t)/(2*self.n_visits))
         self.score = score
         return score
 
-    @property
-    def is_leaf(self):
-        is_leaf = (len(self.children) == 0)
-        return is_leaf
-
     def __str__(self):
-        string = "{wins}/{losses} - {score:.2f}".format(
-            wins=self.wins, losses=self.losses, score=self.score
+        string = "{mean:.1f}/{visits} {score:.2f}".format(
+            mean=self.empirical_mean, visits=self.n_visits, score=self.score
             )
         return string
 
@@ -47,10 +45,10 @@ class Tree:
     def visit(self, state):
         if state not in self.nodes:
             self.nodes[state] = TreeNode()
-        self.nodes[state].n_visits += 1
+        self.nodes[state].visit()
 
     def is_visited(self, state):
-        visited = state in self.nodes
+        visited = (state in self.nodes) and (self.nodes[state].n_visits > 0)
         return visited
 
     def get_node(self, state):
@@ -60,16 +58,14 @@ class Tree:
             node = TreeNode()
         return node
 
-    def update(self, state, win):
-        if win:
-            self.nodes[state].wins += 1
-        else:
-            self.nodes[state].losses += 1
+    def update(self, state, cum_reward):
+        self.nodes[state].update(cum_reward)
 
 
 class MCTS:
-    def __init__(self, game):
+    def __init__(self, game, verbose=False):
         self.game = game
+        self.verbose = verbose
         self.tree = Tree()
 
     def select(self):
@@ -89,6 +85,13 @@ class MCTS:
         index = np.random.choice(indexes)
         next_state = next_states[index]
         action = legal_actions[index]
+        if self.verbose:
+            print("Node: {} - Next nodes: {} - Chosen: {}".format(
+                self.tree.get_node(self.current_state),
+                next_nodes,
+                index
+            ))
+
         return action, next_state
 
     def self_select(self):
@@ -100,30 +103,34 @@ class MCTS:
         action = legal_actions[index]
         return action
 
-    def backpropagate(self, path, win):
+    def backpropagate(self, path, cum_reward):
         for state in path:
-            self.tree.update(state, win)
+            if self.verbose:
+                print("Updating state {}".format(state))
+            self.tree.update(state, cum_reward)
 
     def run_simulation(self, display=False):
         self.game.reset()
+        gamma = 0.95  # Discount factor
         cum_reward = 0
 
         # Start from root
         self.current_state = self.game.get_state()
-        path = [self.current_state]
         self.tree.visit(self.current_state)
+        path = [self.current_state]
         self.display(cum_reward, display)
 
         # (1) Selection step: Traverse until we select a child not in the tree
         action, next_state = self.select()
         while self.tree.is_visited(next_state) and not self.game.finished:
-            # Visit the state before the ghosts move
-            self.tree.visit(next_state)
+            # State before the ghosts move
             path.append(next_state)
 
             reward = self.game.play(action)
+            self.tree.visit(next_state)
             self.current_state = next_state
-            cum_reward += reward
+            i = len(path) - 2
+            cum_reward += gamma**i * reward
             self.display(cum_reward, display)
             # Append the state after the ghosts move
             # state = self.game.get_state()
@@ -144,23 +151,20 @@ class MCTS:
             action = self.self_select()
 
         # (4) Backpropagation step: Backpropagate to the traversed nodes
-        # TODO: Backpropagate the reward instead of win/loss
-        win = self.game.won
-        self.backpropagate(path, win)
+        self.backpropagate(path, cum_reward)
 
-    def train(self, train_time):
+    def train(self, train_time, display_interval=100):
         """Trains the algorithms for train_time seconds"""
         start_time = time.time()
-        simu_count = 0
+        simu_count = 1
         running_time = int(time.time() - start_time)
         while running_time < train_time:
-            if simu_count % 100 == 0:
+            if simu_count % display_interval == 0:
                 display = True
                 print("Simulations: {} - Time: {}s".format(
                       simu_count, running_time))
             else:
                 display = False
-
             # Run one simulation
             self.run_simulation(display=display)
             simu_count += 1
@@ -169,5 +173,5 @@ class MCTS:
 
     def display(self, cum_reward, display):
         if display:
-            board_title = 'reward : {}'.format(cum_reward)
+            board_title = 'reward : {rew:.2f}'.format(rew=cum_reward)
             self.game.draw_state(board_title)
