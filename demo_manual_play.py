@@ -1,6 +1,6 @@
 from pacman.agents import Ghost, PacMan
-from pacman.board import Board, Candy
-from pacman.game import Game, Action
+from pacman.board import Board, Candy, Action
+from pacman.game import Game 
 
 
 board = Board('boards/simple_board.txt')
