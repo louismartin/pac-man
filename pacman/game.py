@@ -11,7 +11,7 @@ class Game:
 
     def __init__(self, board, speed=0.0001, max_plays=np.inf,
                  pacman_agent=None, ghost_agents=[], candies=[],
-                 final_reward=0):
+                 final_reward=0, state_type="board"):
         self.board = board
         self.speed = speed
         self.max_plays = max_plays
@@ -29,6 +29,7 @@ class Game:
         self.final_reward = final_reward
         # Other game parameters
         self.plot = None
+        self.state_type = state_type
         # Initialize the game
         self.reset()
 
@@ -217,12 +218,12 @@ class Game:
             self.plot = plt.matshow(current_board, fignum=0)
         plt.pause(self.speed)
 
-    def get_state(self, representation='board'):
+    def get_state(self):
         """Returns a hashable representation of the current state"""
         # TODO: Ghosts hide candies in this state representation
-        if(representation == 'board'):
+        if(self.state_type == 'board'):
             hashable_state = tuple(self.compute_grid().flatten())
-        elif(representation == 'features'):
+        elif(self.state_type == 'features'):
             pacman_pos = np.asarray(self.pacman.position)
             # Get closest ghost relativ position
             ghost_positions = [np.asarray(ghost.position)
@@ -232,7 +233,28 @@ class Game:
             idx_closest_ghost = np.argmin(ghost_distances)
             ghost_pos = ghost_positions[idx_closest_ghost]
             ghost_rel_pos = ghost_pos - pacman_pos
-            hashable_state = (tuple(ghost_rel_pos),)
+            # Get closest candy relativ position
+            # candy_positions = [np.asarray(candy.position)
+            #                    for candy in self.candies]
+            # ghost_distances = [np.linalg.norm(candy_pos - pacman_pos)
+            #                    for candy_pos in candy_positions]
+            # idx_closest_ghost = np.argmin(ghost_distances)
+            # candy_pos = candy_positions[idx_closest_ghost]
+            # candy_rel_pos = candy_pos - pacman_pos
+
+            # Get closest pacdot relativ position
+            dot_positions = [np.asarray(dot)
+                             for dot in self.pac_dots]
+            dot_distances = [np.linalg.norm(dot_pos - pacman_pos)
+                             for dot_pos in dot_positions]
+            if(dot_distances):
+                # If dots left on board
+                idx_closest_dot = np.argmin(dot_distances)
+                dot_pos = dot_positions[idx_closest_dot]
+                dot_rel_pos = dot_pos - pacman_pos
+                hashable_state = tuple(ghost_rel_pos) + tuple(dot_rel_pos)
+            else:
+                hashable_state = tuple(ghost_rel_pos)
         return hashable_state
 
     def legal_actions(self):
