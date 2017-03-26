@@ -162,7 +162,7 @@ class MCTS:
 
         # (4) Backpropagation step: Backpropagate to the traversed nodes
         self.backpropagate(path, cum_reward)
-        return cum_reward
+        return cum_reward, self.game.won
 
     def train(self, train_time, display_interval=100, discount_factor=0.95):
         """Trains the algorithms for train_time seconds"""
@@ -170,6 +170,7 @@ class MCTS:
         simu_count = 1
         running_time = int(time.time() - start_time)
         final_rewards = []
+        wins = []
         while running_time < train_time:
             if simu_count % display_interval == 0:
                 display = True
@@ -178,13 +179,14 @@ class MCTS:
             else:
                 display = False
             # Run one simulation
-            final_reward = self.run_simulation(
+            final_reward, game_won = self.run_simulation(
                 display=display, discount_factor=discount_factor)
             final_rewards.append(final_reward)
+            wins.append(game_won)
             simu_count += 1
             running_time = int(time.time() - start_time)
         print("Simulations: {} - Time: {}s".format(simu_count, running_time))
-        return final_rewards
+        return final_rewards, wins
 
     def display(self, cum_reward, display):
         if display:
