@@ -109,7 +109,7 @@ class MCTS:
         return action
 
     def backpropagate(self, path, cum_reward):
-        for state in path:
+        for state in set(path):
             if self.verbose:
                 print("Updating state {}".format(state))
             self.tree.update(state, cum_reward)
