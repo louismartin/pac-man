@@ -8,6 +8,7 @@ from pacman.board import Candy, Node, InvalidPosition
 
 
 class Game:
+
     def __init__(self, board, speed=0.0001, max_plays=np.inf,
                  pacman_agent=None, ghost_agents=[], candies=[]):
         self.board = board
@@ -212,10 +213,22 @@ class Game:
             self.plot = plt.matshow(current_board, fignum=0)
         plt.pause(self.speed)
 
-    def get_state(self):
+    def get_state(self, representation='board'):
         """Returns a hashable representation of the current state"""
         # TODO: Ghosts hide candies in this state representation
-        hashable_state = tuple(self.compute_grid().flatten())
+        if(representation == 'board'):
+            hashable_state = tuple(self.compute_grid().flatten())
+        elif(representation == 'features'):
+            pacman_pos = np.asarray(self.pacman.position)
+            # Get closest ghost relativ position
+            ghost_positions = [np.asarray(ghost.position)
+                               for ghost in self.ghosts]
+            ghost_distances = [np.linalg.norm(ghost_pos - pacman_pos)
+                               for ghost_pos in ghost_positions]
+            idx_closest_ghost = np.argmin(ghost_distances)
+            ghost_pos = ghost_positions[idx_closest_ghost]
+            ghost_rel_pos = ghost_pos - pacman_pos
+            hashable_state = (tuple(ghost_rel_pos),)
         return hashable_state
 
     def legal_actions(self):
