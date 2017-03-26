@@ -5,6 +5,7 @@ import numpy as np
 
 
 class TreeNode:
+
     def __init__(self):
         self.empirical_mean = 0
         self.n_visits = 0
@@ -15,21 +16,23 @@ class TreeNode:
 
     def update(self, cum_reward):
         n = self.n_visits
-        self.empirical_mean = self.empirical_mean * (n-1)/n + cum_reward/n
+        self.empirical_mean = self.empirical_mean * \
+            (n - 1) / n + cum_reward / n
 
     def UCB_score(self, t):
         if self.n_visits == 0:
             # If the node was never visited, we need to visit it
             score = np.inf
         else:
-            score = self.empirical_mean + np.sqrt(np.log(t)/(2*self.n_visits))
+            score = self.empirical_mean + \
+                np.sqrt(np.log(t) / (2 * self.n_visits))
         self.score = score
         return score
 
     def __str__(self):
         string = "{mean:.1f}/{visits} {score:.2f}".format(
             mean=self.empirical_mean, visits=self.n_visits, score=self.score
-            )
+        )
         return string
 
     def __repr__(self):
@@ -37,6 +40,7 @@ class TreeNode:
 
 
 class Tree:
+
     def __init__(self):
         # self.nodes is a dictionary with the keys being the states
         # and the values being TreeNode objects
@@ -63,6 +67,7 @@ class Tree:
 
 
 class MCTS:
+
     def __init__(self, game, verbose=False):
         self.game = game
         self.verbose = verbose
@@ -99,7 +104,7 @@ class MCTS:
         legal_actions = self.game.legal_actions()
         # Choose next action at random
         # TODO: Use a simple heuristic
-        index = randint(0, len(legal_actions)-1)
+        index = randint(0, len(legal_actions) - 1)
         action = legal_actions[index]
         return action
 
@@ -109,9 +114,11 @@ class MCTS:
                 print("Updating state {}".format(state))
             self.tree.update(state, cum_reward)
 
-    def run_simulation(self, display=False):
+    def run_simulation(self, display=False, discount_factor=0.95):
+        """
+        :param discount_factor: discount factor for the reward
+        """
         self.game.reset()
-        gamma = 0.95  # Discount factor
         cum_reward = 0
 
         # Start from root
@@ -122,6 +129,8 @@ class MCTS:
 
         # (1) Selection step: Traverse until we select a child not in the tree
         action, next_state = self.select()
+
+        game_step = 0
         while self.tree.is_visited(next_state) and not self.game.finished:
             # State before the ghosts move
             path.append(next_state)
@@ -129,8 +138,8 @@ class MCTS:
             reward = self.game.play(action)
             self.tree.visit(next_state)
             self.current_state = next_state
-            i = len(path) - 2
-            cum_reward += gamma**i * reward
+            game_step += 1
+            cum_reward += discount_factor**game_step * reward
             self.display(cum_reward, display)
             # Append the state after the ghosts move
             # state = self.game.get_state()
@@ -145,8 +154,9 @@ class MCTS:
 
         # (3) Simulation step: Self-play until the end of the game
         while not self.game.finished:
+            game_step += 1
             reward = self.game.play(action)
-            cum_reward += reward
+            cum_reward += discount_factor**game_step * reward
             self.display(cum_reward, display)
             action = self.self_select()
 
@@ -154,7 +164,7 @@ class MCTS:
         self.backpropagate(path, cum_reward)
         return cum_reward
 
-    def train(self, train_time, display_interval=100):
+    def train(self, train_time, display_interval=100, discount_factor=0.95):
         """Trains the algorithms for train_time seconds"""
         start_time = time.time()
         simu_count = 1
@@ -168,7 +178,8 @@ class MCTS:
             else:
                 display = False
             # Run one simulation
-            final_reward = self.run_simulation(display=display)
+            final_reward = self.run_simulation(
+                display=display, discount_factor=discount_factor)
             final_rewards.append(final_reward)
             simu_count += 1
             running_time = int(time.time() - start_time)
