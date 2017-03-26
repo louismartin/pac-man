@@ -10,7 +10,8 @@ from pacman.board import Candy, Node, InvalidPosition
 class Game:
 
     def __init__(self, board, speed=0.0001, max_plays=np.inf,
-                 pacman_agent=None, ghost_agents=[], candies=[]):
+                 pacman_agent=None, ghost_agents=[], candies=[],
+                 final_reward=0):
         self.board = board
         self.speed = speed
         self.max_plays = max_plays
@@ -24,6 +25,8 @@ class Game:
         for candy in candies:
             self.initial_candies[candy.position] = candy
         self.pac_dot_reward = 1
+        # Reward for winning game
+        self.final_reward = final_reward
         # Other game parameters
         self.plot = None
         # Initialize the game
@@ -152,6 +155,7 @@ class Game:
                 del self.pac_dots[pos]
                 if (len(self.pac_dots) + len(self.candies)) == 0:
                     self.won = True
+                    reward += self.final_reward
 
         # Check if we did not reach the maximum number of plays
         self.n_plays += 1
