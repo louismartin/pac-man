@@ -224,38 +224,41 @@ class Game:
         if(self.state_type == 'board'):
             hashable_state = tuple(self.compute_grid().flatten())
         elif(self.state_type == 'features'):
-            pacman_pos = np.asarray(self.pacman.position)
+            # hashable_state is a tuple :
+            # first level identifies the type of tracked item
+            # second level is ordered closest relative positions as pairs
+
             # Get closest ghost relativ position
             ghost_positions = [np.asarray(ghost.position)
                                for ghost in self.ghosts]
-            ghost_distances = [np.linalg.norm(ghost_pos - pacman_pos)
-                               for ghost_pos in ghost_positions]
-            idx_closest_ghost = np.argmin(ghost_distances)
-            ghost_pos = ghost_positions[idx_closest_ghost]
-            ghost_rel_pos = ghost_pos - pacman_pos
-            # Get closest candy relativ position
-            # candy_positions = [np.asarray(candy.position)
-            #                    for candy in self.candies]
-            # ghost_distances = [np.linalg.norm(candy_pos - pacman_pos)
-            #                    for candy_pos in candy_positions]
-            # idx_closest_ghost = np.argmin(ghost_distances)
-            # candy_pos = candy_positions[idx_closest_ghost]
-            # candy_rel_pos = candy_pos - pacman_pos
+            ghost_rel_pos = self.get_relative_positions(ghost_positions)
 
-            # Get closest pacdot relativ position
+            # Get closest pacdot relative postion
             dot_positions = [np.asarray(dot)
                              for dot in self.pac_dots]
-            dot_distances = [np.linalg.norm(dot_pos - pacman_pos)
-                             for dot_pos in dot_positions]
-            if(dot_distances):
-                # If dots left on board
-                idx_closest_dot = np.argmin(dot_distances)
-                dot_pos = dot_positions[idx_closest_dot]
-                dot_rel_pos = dot_pos - pacman_pos
-                hashable_state = tuple(ghost_rel_pos) + tuple(dot_rel_pos)
-            else:
-                hashable_state = tuple(ghost_rel_pos)
+            dot_rel_pos = self.get_relative_positions(dot_positions)
+
+            hashable_state = (ghost_rel_pos, dot_rel_pos)
         return hashable_state
+
+    def get_relative_positions(self, positions, nb_neighbors=1):
+        """
+        Returns the relative cooridinates to pacman's position for the
+        nb_neighbors closest positions in positions
+        """
+        pacman_pos = np.asarray(self.pacman.position)
+        distances = [np.linalg.norm(pos - pacman_pos)
+                     for pos in positions]
+        if(distances):
+            # At least one item on the board
+            idxs_closest = np.argsort(distances)
+            closest_positions = np.asarray(positions)[idxs_closest[:nb_neighbors]]
+            relative_positions = closest_positions - pacman_pos
+            hashable_pos = tuple([tuple(relative_pos)
+                                  for relative_pos in relative_positions])
+        else:
+            hashable_pos = ()
+        return hashable_pos
 
     def legal_actions(self):
         current_node = self.pacman.current_node
