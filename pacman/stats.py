@@ -10,7 +10,7 @@ def running_mean(series, run_length):
 
 
 def train_and_monitor_mcts(game, train_time=500, display_interval=10000,
-                           discount_factors=[0.95]):
+                           discount_factors=[0.95], bandit="UCB"):
     """
     Trains several mcts for the various discount_factors
     :param discount_factors: list of various discount_factors to use
@@ -22,7 +22,7 @@ def train_and_monitor_mcts(game, train_time=500, display_interval=10000,
     discount_rewards = []
     discount_wins = []
     for discount_factor in discount_factors:
-        mcts = MCTS(game, verbose=False)
+        mcts = MCTS(game, verbose=False, bandit=bandit)
         rewards, wins = mcts.train(train_time=train_time,
                                    display_interval=display_interval,
                                    discount_factor=discount_factor)
