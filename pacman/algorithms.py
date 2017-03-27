@@ -4,20 +4,79 @@ from random import randint
 import numpy as np
 
 
+def kl(p, q):
+    '''Kullback-Leibler divergence'''
+    if p == 0:
+        return np.log(1 / (1 - q))
+    elif q == 0:
+        return np.inf
+    else:
+        assert p < 1
+        assert q < 1
+        return p * np.log(p / q) + (1 - p) * np.log((1 - p) / (1 - q))
+
+
+def dkl_dq(p, q):
+    '''Kullback-Leibler divergence derivative w.r.t. q'''
+    return (q - p) / (q * (1 - q))
+
+
+def newton_raphson(x, f, df, a, b, n_iter=20):
+    '''Newton-Raphson method to find the 0 of f'''
+    def proj(x, a, b):
+        return max(a, min(x, b))
+
+    converged = False
+    x = proj(x, a, b)
+    for i in range(n_iter):
+        fx = f(x)
+        x = proj(x - fx/df(x), a, b)
+        if fx**2 < 1e-12:
+            break
+    return x
+
+
 class TreeNode:
 
     def __init__(self):
         self.empirical_mean = 0
         self.n_visits = 0
         self.score = 0
+        self.min_reward = 0
+        self.max_reward = 1
 
     def visit(self):
         self.n_visits += 1
 
     def update(self, cum_reward):
+        self.min_reward = min(cum_reward, self.min_reward)
+        self.max_reward = max(cum_reward, self.max_reward)
         n = self.n_visits
         self.empirical_mean = self.empirical_mean * \
             (n - 1) / n + cum_reward / n
+
+    def KL_UCB_score(self, t):
+        if self.n_visits == 0:
+            # If the node was never visited, we need to visit it
+            q = np.inf
+        else:
+            eps = 1e-8
+            # Rewards between 0 and 1 are needed for KL-UCB
+            p = (self.empirical_mean - self.min_reward) / \
+                (self.max_reward - self.min_reward)
+            if p >= 1:
+                return 1
+            q = p + eps
+            logt_dn = np.log(t) / self.n_visits
+
+            def f(q):
+                return logt_dn - kl(p, q)
+
+            def df(q):
+                return - dkl_dq(p, q)
+            q = newton_raphson(q, f, df, a=eps, b=(1-eps))
+        self.score = q
+        return q
 
     def UCB_score(self, t):
         if self.n_visits == 0:
@@ -68,9 +127,11 @@ class Tree:
 
 class MCTS:
 
-    def __init__(self, game, verbose=False):
+    def __init__(self, game, verbose=False, bandit="UCB"):
         self.game = game
         self.verbose = verbose
+        assert bandit in ["UCB", "KL-UCB"]
+        self.bandit = bandit
         self.tree = Tree()
 
     def select(self):
@@ -84,7 +145,10 @@ class MCTS:
 
         # Choose an action based on the node it will lead to
         t = self.tree.get_node(self.current_state).n_visits
-        scores = [node.UCB_score(t) for node in next_nodes]
+        if self.bandit == "UCB":
+            scores = [node.UCB_score(t) for node in next_nodes]
+        elif self.bandit == "KL-UCB":
+            scores = [node.KL_UCB_score(t) for node in next_nodes]
         indexes = np.argwhere(scores == np.max(scores)).flatten()
         # choose one of the argmax at random
         index = np.random.choice(indexes)
